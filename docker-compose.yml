@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  db:
+    build:
+      context: ./db
+    image: integration-db-eth
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+
+  identity-service:
+    image: ampnet/identity-service:latest
+    environment:
+      - "spring.profiles.active=dev"
+      - "com.ampnet.identityservice.test.enabled-test-kyc=true"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.private-key=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-service-address=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+    depends_on:
+       - db
+    ports:
+       - 8136:8136
+
+  hardhat:
+    build:
+      context: .
+      dockerfile: hh-docker/Dockerfile.hh
+    restart: always
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - 8545:8545
+
+# report-service:
+#   image: ampnet/report-service:latest
+#   environment:
+#     - "spring.profiles.active=dev"
+#   ports:
+#     - 8137:8137
+
+#  redis:
+#    image: redis:6-alpine
+#    ports:
+#      - 6379:6379
