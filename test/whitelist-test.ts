@@ -4,7 +4,7 @@ import { Contract, Signer } from "ethers";
 import { expect } from "chai";
 import * as helpers from "../util/helpers";
 import { it } from "mocha";
-
+// @ts-ignore
 import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
 
@@ -31,9 +31,9 @@ describe("Whitelist user address", function () {
     let issuer: Contract;
 
     // TODO: use when docker util is ready
-    // before(async function () {
-    //     await docker.up();
-    // })
+    before(async function () {
+        await docker.up();
+    })
 
     beforeEach(async function () {
         const accounts: Signer[] = await ethers.getSigners();
@@ -87,7 +87,7 @@ describe("Whitelist user address", function () {
     })
 
     // TODO: use when docker util is ready
-    // after(async function () {
-    //     await docker.down();
-    // })
+    after(async function () {
+        await docker.down();
+    })
 })

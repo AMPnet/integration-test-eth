@@ -7,10 +7,6 @@ Repo for integration tests for AMPnet crowdfunding project on EVM.
 To start the test run following:
 
 ```shell
-npm install
-docker-compose pull
-docker-compose up -d
-# Wait until all services are up and running
 npm run test
 ```
 
@@ -24,4 +20,5 @@ Test will start following services in docker compose:
 
 ## TODO
 
-Current implatition 
+* Fix test for whitelisting
+* Add test for report-service
