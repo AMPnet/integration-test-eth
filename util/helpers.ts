@@ -1,6 +1,6 @@
 // @ts-ignore
 import { ethers } from "hardhat";
-import { Contract, Signer, BigNumber } from "ethers";
+import { Contract, Signer } from "ethers";
 
 export async function deployStablecoin(deployer: Signer, supply: string): Promise<Contract> {
   const supplyWei = ethers.utils.parseEther(supply);
@@ -22,8 +22,8 @@ export async function deployFactories(deployer: Signer): Promise<Contract[]> {
 export async function deployServices(deployer: Signer, masterWalletApprover: string, rewardPerApprove: string): Promise<Contract[]> {
   return [
     await deployWalletApproverService(deployer, masterWalletApprover, rewardPerApprove),
-    await deployDeployerService(deployer),
-    await deployQueryService(deployer)
+    // await deployDeployerService(deployer),
+    // await deployQueryService(deployer)
   ];
 }
 

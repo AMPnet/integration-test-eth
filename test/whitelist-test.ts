@@ -15,8 +15,6 @@ describe("Whitelist user address", function () {
 
     //////// SERVICES ////////
     let walletApproverService: Contract;
-    let deployerService: Contract;
-    let queryService: Contract;
 
     //////// SIGNERS ////////
     let deployer: Signer;
@@ -30,7 +28,6 @@ describe("Whitelist user address", function () {
     let stablecoin: Contract;
     let issuer: Contract;
 
-    // TODO: use when docker util is ready
     before(async function () {
         await docker.up();
     })
@@ -53,8 +50,6 @@ describe("Whitelist user address", function () {
             "0.001"
         );
         walletApproverService = services[0];
-        deployerService = services[1];
-        queryService = services[2];
     });
 
     it("Should whitelist user", async function () {
@@ -80,13 +75,12 @@ describe("Whitelist user address", function () {
         await userService.completeKyc(accessToken, franksAddress)
         await userService.whitelistAddress(accessToken, issuer.address, await frank.getChainId())
 
-        await new Promise(f => setTimeout(f, 5000));
+        await new Promise(f => setTimeout(f, 50000));
         const isWalletApproved = await issuer.isWalletApproved(franksAddress)
-        console.log("response: ", isWalletApproved)
+        console.log("Wallet approved: ", isWalletApproved)
         expect(isWalletApproved).to.be.true
     })
 
-    // TODO: use when docker util is ready
     after(async function () {
         await docker.down();
     })
