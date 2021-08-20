@@ -1,7 +1,10 @@
 name: Daily Test
 on:
   schedule:
-    - cron:  '0 3 * * *'
+    # Once a month
+    - cron: '0 0 1 * *'
+# Every night
+#    - cron:  '0 3 * * *'
 
 jobs:
   test:
