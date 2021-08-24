@@ -38,10 +38,10 @@ async function down() {
 
 async function healthcheck() {
     const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
-    // const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
+    const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
     const healthcheck = new Healthcheck([
         identityServiceChecker,
-        // reportServiceChecker,
+        reportServiceChecker,
     ])
     let numberOfChecks = 0
     do {

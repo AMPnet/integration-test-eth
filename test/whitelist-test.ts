@@ -7,6 +7,7 @@ import { it } from "mocha";
 // @ts-ignore
 import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
+import * as reportService from "../util/report-service";
 
 describe("Whitelist user address", function () {
 
@@ -71,17 +72,25 @@ describe("Whitelist user address", function () {
         const frank = accounts[5]
         const franksAddress = await frank.getAddress()
         const payload = await userService.getPayload(franksAddress)
-        const accessToken = await userService.getAccessToken(franksAddress, await frank.signMessage(payload))
-        await userService.completeKyc(accessToken, franksAddress)
-        await userService.whitelistAddress(accessToken, issuer.address, await frank.getChainId())
+        const franksAccessToken = await userService.getAccessToken(franksAddress, await frank.signMessage(payload))
+        await userService.completeKyc(franksAccessToken, franksAddress)
+        await userService.whitelistAddress(franksAccessToken, issuer.address, await frank.getChainId())
 
-        await new Promise(f => setTimeout(f, 50000));
-        const isWalletApproved = await issuer.isWalletApproved(franksAddress)
-        console.log("Wallet approved: ", isWalletApproved)
-        expect(isWalletApproved).to.be.true
+        await new Promise(f => setTimeout(f, 5000));
+        // const isWalletApproved = await issuer.isWalletApproved(franksAddress)
+        // console.log("Wallet approved: ", isWalletApproved)
+        // expect(isWalletApproved).to.be.true
+
+        // Generate xlsx report
+        const adminsPayload = await userService.getPayload(issuerOwnerAddress)
+        const adminsAccessToken = await userService
+            .getAccessToken(issuerOwnerAddress, await issuerOwner.signMessage(adminsPayload))
+        const xlsxReport = await reportService
+            .getXlsxReport(adminsAccessToken, issuerOwnerAddress, await issuerOwner.getChainId())
+        expect(xlsxReport?.status).to.equal(200)
     })
 
     after(async function () {
-        await docker.down();
+        // await docker.down();
     })
 })
