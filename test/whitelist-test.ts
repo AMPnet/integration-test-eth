@@ -51,6 +51,7 @@ describe("Whitelist user address", function () {
             "0.001"
         );
         walletApproverService = services[0];
+        // await helpers.deployFactories(deployer);
     });
 
     it("Should whitelist user", async function () {
@@ -88,6 +89,12 @@ describe("Whitelist user address", function () {
         const xlsxReport = await reportService
             .getXlsxReport(adminsAccessToken, issuerOwnerAddress, await issuerOwner.getChainId())
         expect(xlsxReport?.status).to.equal(200)
+
+        // Get transaction history
+        const txHistory = await reportService
+            .getTxHistory(adminsAccessToken, issuerOwnerAddress, await issuerOwner.getChainId());
+        console.log("TxHistory: ", await txHistory?.data);
+        // expect(await txHistory.data.transactions.size).is.equal(0)
     })
 
     after(async function () {

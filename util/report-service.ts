@@ -13,3 +13,16 @@ export async function getXlsxReport(token: string, issuer: string, chainId: numb
         return null
     }
 }
+
+export async function getTxHistory(token: string, issuer: string, chainId: number): Promise<AxiosResponse|null> {
+    try {
+        return await axios.get(`${baseUrl}/tx_history/${chainId}/${issuer}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+    } catch (error) {
+        console.log("getXlsxReport error: ", error)
+        return null
+    }
+}
