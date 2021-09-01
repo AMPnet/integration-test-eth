@@ -15,7 +15,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.0.0",
-    "@types/node": "^16.4.13",
+    "@types/node": "^16.7.10",
     "@danielwpz/health-check": "0.0.1",
     "axios": "^0.21.1",
     "chai": "^4.3.4",
