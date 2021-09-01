@@ -39,7 +39,6 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/eugen/ampnet-docker-compose
+            cd /root/eth-compose
             docker-compose pull
             docker-compose up -d
-            docker-compose restart nginx

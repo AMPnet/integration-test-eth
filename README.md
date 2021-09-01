@@ -1,5 +1,7 @@
 # Integration test
 
+[![Daily Test](https://github.com/AMPnet/integration-test-eth/actions/workflows/daily-test.yml/badge.svg?branch=master)](https://github.com/AMPnet/integration-test-eth/actions/workflows/daily-test.yml)
+
 Repo for integration tests for AMPnet crowdfunding project on EVM.
 
 ## Usage
@@ -14,11 +16,7 @@ npm run test
 
 Test will start following services in docker compose:
 
-* Identity-service
+* identity-service
+* report-service
 * Postgres database
 * Hardhat
-
-## TODO
-
-* Fix test for whitelisting
-* Add test for report-service
