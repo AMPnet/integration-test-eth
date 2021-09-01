@@ -16,6 +16,11 @@
           "type": "address"
         },
         {
+          "internalType": "address",
+          "name": "apxRegistry",
+          "type": "address"
+        },
+        {
           "internalType": "string",
           "name": "ansName",
           "type": "string"
@@ -24,6 +29,11 @@
           "internalType": "uint256",
           "name": "initialTokenSupply",
           "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isTransferable",
+          "type": "bool"
         },
         {
           "internalType": "bool",

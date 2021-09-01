@@ -45,7 +45,7 @@ services:
      - "management.endpoints.web.exposure.include=info,health,prometheus"
      - "com.ampnet.reportserviceeth.queue.polling=100"
      - "com.ampnet.reportserviceeth.queue.initial-delay=10000"
-     - "com.ampnet.reportserviceeth.chain-mumbai.cf-manager-factory-address=0xa77d68e73752b4e4E6670032400f9a1Da522ed22"
-     - "com.ampnet.reportserviceeth.chain-mumbai.payout-manager-factory-address=0x39d13eA4781F4FA57a347F5C49dD716048822F16"
+     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.cf-manager-factory-address=0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"
+     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.payout-manager-factory-address=0x0165878A594ca255338adfa4d48449f69242Eb8F"
    ports:
      - 8137:8137

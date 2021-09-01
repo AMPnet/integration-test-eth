@@ -16,9 +16,11 @@ contract AssetFactory is IAssetFactory {
     function create(
         address creator,
         address issuer,
+        address apxRegistry,
         string memory ansName,
         uint256 initialTokenSupply,
-        bool whitelistRequiredForTransfer,
+        bool whitelistRequiredForRevenueClaim,
+        bool whitelistRequiredForLiquidationClaim,
         string memory name,
         string memory symbol,
         string memory info
@@ -27,17 +29,23 @@ contract AssetFactory is IAssetFactory {
         require(namespace[issuer][ansName] == address(0), "AssetFactory: asset with this name already exists");
         uint256 id = instances.length;
         uint256 ansId = instancesPerIssuer[issuer].length;
-        address asset = address(new Asset(
-            id,
-            creator,
-            issuer,
-            ansName,
-            ansId,
-            initialTokenSupply,
-            whitelistRequiredForTransfer,
-            name,
-            symbol,
-            info
+        address asset = 
+            address(
+                new Asset(
+                    Structs.AssetConstructorParams(
+                        id,
+                        creator,
+                        issuer,
+                        apxRegistry,
+                        ansName,
+                        ansId,
+                        initialTokenSupply,
+                        whitelistRequiredForRevenueClaim,
+                        whitelistRequiredForLiquidationClaim,
+                        name,
+                        symbol,
+                        info
+                    )
         ));
         instances.push(asset);
         instancesPerIssuer[issuer].push(asset);

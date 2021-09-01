@@ -21,12 +21,16 @@ module.exports = {
   solidity: "0.8.0",
   settings: {
     optimizer: {
-      enabled: true
+      enabled: true,
+      runs: 200
     }
   },
   networks: {
-    localhost: {
-      blockGasLimit: 20_000_000
+    hardhat: {
+      gas: 20000000,
+      blockGasLimit: 0x1fffffffffffff,
+      allowUnlimitedContractSize: true,
+      timeout: 1800000
     }
   },
   mocha: {
