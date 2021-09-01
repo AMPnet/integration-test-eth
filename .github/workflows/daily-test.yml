@@ -1,17 +1,15 @@
 name: Daily Test
 on:
   schedule:
-    # Once a month
-    - cron: '0 0 1 * *'
-# Every night
-#    - cron:  '0 3 * * *'
+    # Every night
+    - cron:  '0 3 * * *'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
 
     steps:
       - uses: actions/checkout@v2
