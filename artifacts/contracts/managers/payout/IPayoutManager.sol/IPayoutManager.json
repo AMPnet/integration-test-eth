@@ -120,6 +120,11 @@
               "type": "address"
             },
             {
+              "internalType": "address",
+              "name": "assetFactory",
+              "type": "address"
+            },
+            {
               "internalType": "uint256",
               "name": "totalPayoutsCreated",
               "type": "uint256"
@@ -231,19 +236,6 @@
         }
       ],
       "name": "totalReleased",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "totalShares",
       "outputs": [
         {
           "internalType": "uint256",

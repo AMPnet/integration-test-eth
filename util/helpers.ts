@@ -1,6 +1,7 @@
 // @ts-ignore
 import { ethers } from "hardhat";
 import { Contract, Signer } from "ethers";
+import * as filters from "./filters";
 
 export async function deployStablecoin(deployer: Signer, supply: string): Promise<Contract> {
   const supplyWei = ethers.utils.parseEther(supply);
@@ -10,10 +11,18 @@ export async function deployStablecoin(deployer: Signer, supply: string): Promis
   return stablecoin;
 }
 
+export async function deployApxRegistry(deployer: Signer, masterOwner: String, assetManager: String, priceManager: String): Promise<Contract> {
+  const ApxRegistry = await ethers.getContractFactory("ApxAssetsRegistry", deployer);
+  const apxRegistry = await ApxRegistry.deploy(masterOwner, assetManager, priceManager);
+  console.log(`\nApxRegistry deployed\n\tAt address: ${apxRegistry.address}`);
+  return apxRegistry;
+}
+
 export async function deployFactories(deployer: Signer): Promise<Contract[]> {
   return [
     await deployIssuerFactory(deployer),
     await deployAssetFactory(deployer),
+    await deployAssetTransferableFactory(deployer),
     await deployCfManagerFactory(deployer),
     await deployPayoutManagerFactory(deployer)
   ];
@@ -22,8 +31,8 @@ export async function deployFactories(deployer: Signer): Promise<Contract[]> {
 export async function deployServices(deployer: Signer, masterWalletApprover: string, rewardPerApprove: string): Promise<Contract[]> {
   return [
     await deployWalletApproverService(deployer, masterWalletApprover, rewardPerApprove),
-    // await deployDeployerService(deployer),
-    // await deployQueryService(deployer)
+    await deployDeployerService(deployer),
+    await deployQueryService(deployer)
   ];
 }
 
@@ -67,6 +76,13 @@ export async function deployAssetFactory(deployer: Signer): Promise<Contract> {
   const assetFactory = await AssetFactory.deploy();
   console.log(`\nAssetFactory deployed\n\tAt address: ${assetFactory.address}`);
   return assetFactory;
+}
+
+export async function deployAssetTransferableFactory(deployer: Signer): Promise<Contract> {
+  const AssetTransferableFactory = await ethers.getContractFactory("AssetTransferableFactory", deployer);
+  const assetTransferableFactory = await AssetTransferableFactory.deploy();
+  console.log(`\nAssetTransferableFactory deployed\n\tAt address: ${assetTransferableFactory.address}`);
+  return assetTransferableFactory;
 }
 
 export async function deployCfManagerFactory(deployer: Signer): Promise<Contract> {
@@ -391,6 +407,44 @@ export async function setInfo(owner: Signer, contract: Contract, infoHash: Strin
   await contract.connect(owner).setInfo(infoHash);
 }
 
+export async function setChildChainManager(owner: Signer, contract: Contract, manager: String) {
+  await contract.connect(owner).setChildChainManager(manager);
+}
+
+/**
+ * ApxAssetRegistry related functions. Handled by the APX protocol!
+ */
+export async function registerAsset(assetManager: Signer, apxRegistry: Contract, original: String, mirrored: String) {
+  await apxRegistry.connect(assetManager).registerAsset(original, mirrored, true);
+}
+export async function updateState(assetManager: Signer, apxRegistry: Contract, asset: String, state: boolean) {
+  await apxRegistry.connect(assetManager).updateState(asset, state);
+}
+export async function updatePrice(priceManager: Signer, apxRegistry: Contract, asset: String, price: Number, precision: Number, expiry: Number) {
+  await apxRegistry.connect(priceManager).updatePrice(asset, price, precision, expiry);
+}
+
+/**
+ * Liquidation functions.
+ */
+export async function liquidate(liquidator: Signer, asset: Contract, stablecoin: Contract, liquidationFunds: Number) {
+  const liquidatorAddress = await liquidator.getAddress();
+  const liquidatorOwnedAssetTokens = await asset.balanceOf(liquidatorAddress);
+  console.log("liquidatorOwnedAssetTokens", liquidatorOwnedAssetTokens.toString());
+  console.log("liquidator balance preliquidation", (await stablecoin.balanceOf(liquidatorAddress)).toString());
+
+  const liquidationFundsWei = ethers.utils.parseEther(liquidationFunds.toString());
+  await asset.connect(liquidator).approve(asset.address, liquidatorOwnedAssetTokens);
+  await stablecoin.connect(liquidator).approve(asset.address, liquidationFundsWei);
+  await asset.connect(liquidator).liquidate();
+}
+export async function claimLiquidationShare(investor: Signer, asset: Contract) {
+  const investorAddress = await investor.getAddress();
+  const tokenAmount = await asset.balanceBeforeLiquidation(investorAddress);
+  await asset.connect(investor).approve(asset.address, tokenAmount);
+  await asset.claimLiquidationShare(investorAddress);
+}
+
 /**
  * Query contract for complete edit history.
  * Every new info update is a new hash stored in the contract state together with the timestamp.
@@ -398,7 +452,7 @@ export async function setInfo(owner: Signer, contract: Contract, infoHash: Strin
  * @param contract Must be one of: Issuer, CfManager, Asset, PayoutManager
  * @returns Returns array of all the info strings (with timestamps) with the last one being the active info hash.
  */
-export async function getInfoHistory(contract: Contract): Promise<Object> {
+export async function getInfoHistory(contract: Contract): Promise<object> {
   return contract.getInfoHistory();
 }
 
@@ -441,8 +495,12 @@ export async function getIssuerState(contract: Contract): Promise<String> {
  *  ]
  * 
  */
-export async function getAssetState(contract: Contract): Promise<Object> {
+export async function getAssetState(contract: Contract): Promise<object> {
   return contract.getState();
+}
+export async function getAssetChildChainManager(contract: Contract): Promise<string> {
+  const state = await contract.getState();
+  return state.childChainManager;
 }
 
 /**
@@ -468,7 +526,7 @@ export async function getAssetState(contract: Contract): Promise<Object> {
  *    info: 'updated-campaign-info-hash'
  *   ]
  */
-export async function getCrowdfundingCampaignState(contract: Contract): Promise<Object> {
+export async function getCrowdfundingCampaignState(contract: Contract): Promise<object> {
   return contract.getState();
 }
 
@@ -486,7 +544,7 @@ export async function getCrowdfundingCampaignState(contract: Contract): Promise<
  *    info: 'updated-payout-manager-info-hash'
  *   ]
  */
-export async function getPayoutManagerState(contract: Contract): Promise<Object> {
+export async function getPayoutManagerState(contract: Contract): Promise<object> {
   return contract.getState();
 }
 
@@ -494,7 +552,7 @@ export async function getPayoutManagerState(contract: Contract): Promise<Object>
  * @param issuerFactory Predeployed Issuer factory instance
  * @returns Array of issuer states
  */
-export async function fetchIssuerInstances(issuerFactory: Contract): Promise<Object> {
+export async function fetchIssuerInstances(issuerFactory: Contract): Promise<object> {
   const instances = await issuerFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("Issuer", instanceAddress);
@@ -507,7 +565,7 @@ export async function fetchIssuerInstances(issuerFactory: Contract): Promise<Obj
  * @param assetFactory Predeployed Asset factory instance
  * @returns Array of asset states
  */
-export async function fetchAssetInstances(assetFactory: Contract): Promise<Object> {
+export async function fetchAssetInstances(assetFactory: Contract): Promise<object> {
   const instances = await assetFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("Asset", instanceAddress);
@@ -521,7 +579,7 @@ export async function fetchAssetInstances(assetFactory: Contract): Promise<Objec
  * @param issuer Filter assets by this issuer
  * @returns Array of asset states
  */
-export async function fetchAssetInstancesForIssuer(assetFactory: Contract, issuer: Contract): Promise<Object> {
+export async function fetchAssetInstancesForIssuer(assetFactory: Contract, issuer: Contract): Promise<object> {
   const instances = await assetFactory.getInstancesForIssuer(issuer.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("Asset", instanceAddress);
@@ -534,7 +592,7 @@ export async function fetchAssetInstancesForIssuer(assetFactory: Contract, issue
  * @param cfManagerFactory Predeployed CfManager factory instance
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstances(cfManagerFactory: Contract): Promise<Object> {
+export async function fetchCrowdfundingInstances(cfManagerFactory: Contract): Promise<object> {
   const instances = await cfManagerFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
@@ -548,7 +606,7 @@ export async function fetchCrowdfundingInstances(cfManagerFactory: Contract): Pr
  * @param issuer Filter campaigns by this issuer
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Contract, issuer: Contract): Promise<Object> {
+export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Contract, issuer: Contract): Promise<object> {
   const instances = await cfManagerFactory.getInstancesForIssuer(issuer.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
@@ -562,7 +620,7 @@ export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Cont
  * @param asset Filter campaigns by this asset
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstancesForAsset(cfManagerFactory: Contract, asset: Contract): Promise<Object> {
+export async function fetchCrowdfundingInstancesForAsset(cfManagerFactory: Contract, asset: Contract): Promise<object> {
   const instances = await cfManagerFactory.getInstancesForAsset(asset.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
@@ -575,7 +633,7 @@ export async function fetchCrowdfundingInstancesForAsset(cfManagerFactory: Contr
  * @param payoutManagerFactory Predeployed PayoutManager factory instance
  * @returns Array of payout manager states
  */
-export async function fetchPayoutManagerInstances(payoutManagerFactory: Contract): Promise<Object> {
+export async function fetchPayoutManagerInstances(payoutManagerFactory: Contract): Promise<object> {
   const instances = await payoutManagerFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("PayoutManager", instanceAddress);
@@ -603,7 +661,7 @@ export async function fetchPayoutManagerInstancesForIssuer(payoutManagerFactory:
  * @param asset Filter payout managers by this asset
  * @returns Array of payout manager states
  */
-export async function fetchPayoutManagerInstancesForAsset(payoutManagerFactory: Contract, asset: Contract): Promise<Object> {
+export async function fetchPayoutManagerInstancesForAsset(payoutManagerFactory: Contract, asset: Contract): Promise<object> {
   const instances = await payoutManagerFactory.getInstancesForAsset(asset.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
     const instance = await ethers.getContractAt("PayoutManager", instanceAddress);
@@ -617,7 +675,7 @@ export async function fetchPayoutManagerInstancesForAsset(payoutManagerFactory: 
  * @param id Issuer id
  * @returns issuer state
  */
-export async function fetchIssuerStateById(issuerFactory: Contract, id: Number): Promise<Object> {
+export async function fetchIssuerStateById(issuerFactory: Contract, id: Number): Promise<object> {
   const instanceAddress = await issuerFactory.instances(id);
   const instance = await ethers.getContractAt("Issuer", instanceAddress);
   return instance.getState();
@@ -628,7 +686,7 @@ export async function fetchIssuerStateById(issuerFactory: Contract, id: Number):
  * @param id Crowdfunding campaign id
  * @returns Crowdfunding campaign state
  */
-export async function fetchCampaignStateById(cfManagerFactory: Contract, id: Number): Promise<Object> {
+export async function fetchCampaignStateById(cfManagerFactory: Contract, id: Number): Promise<object> {
   const instanceAddress = await cfManagerFactory.instances(id);
   const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
   return instance.getState();
@@ -639,7 +697,7 @@ export async function fetchCampaignStateById(cfManagerFactory: Contract, id: Num
  * @param id Asset id
  * @returns Asset state
  */
-export async function fetchAssetStateById(assetFactory: Contract, id: Number): Promise<Object> {
+export async function fetchAssetStateById(assetFactory: Contract, id: Number): Promise<object> {
   const instanceAddress = await assetFactory.instances(id);
   const instance = await ethers.getContractAt("Asset", instanceAddress);
   return instance.getState();
@@ -650,10 +708,39 @@ export async function fetchAssetStateById(assetFactory: Contract, id: Number): P
  * @param id PayoutManager id
  * @returns PayoutManager state 
  */
-export async function fetchPayoutManagerStateById(payoutManagerFactory: Contract, id: Number): Promise<Object> {
+export async function fetchPayoutManagerStateById(payoutManagerFactory: Contract, id: Number): Promise<object> {
   const instanceAddress = await payoutManagerFactory.instances(id);
   const instance = await ethers.getContractAt("PayoutManager", instanceAddress);
   return instance.getState();
+}
+
+/**
+ * Fetches transaction history for given user wallet and issuer instance.
+ * To calculate this, one must fetch all the instances of the following contracts for given issuer: 
+ * -> Asset (for asset token transfers, if any)
+ * -> CfManagerSoftcap (for investment, cancel investment and claim tokens transactions)
+ * -> PayoutManager (for revenue share claim transactions)
+ * Then after all the contract instances have been fetched, we scan for specific events and filter
+ * by the user's wallet.
+ * 
+ * @param wallet User wallet address
+ * @param issuer Issuer contract instance
+ * @param cfManagerFactory Predeployed CfManager contract factory
+ * @param assetFactory Predeployed Asset contract factory
+ * @param payoutManagerFactory Predeployed PayoutManager contract factory
+ */
+export async function fetchTxHistory(
+  wallet: string,
+  issuer: Contract,
+  cfManagerFactory: Contract,
+  assetFactory: Contract,
+  payoutManagerFactory: Contract
+) {
+  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);;
+  const crowdfundingTransactions = await filters.getCrowdfundingCampaignTransactions(wallet, issuer, cfManagerFactory);
+  const payoutManagerTransactions = await filters.getPayoutManagerTransactions(wallet, issuer, payoutManagerFactory);
+  const transactions = assetTransactions.concat(crowdfundingTransactions).concat(payoutManagerTransactions);
+  return transactions.sort((a, b) => (a.timestamp < b.timestamp) ? -1 : 1);
 }
 
 /**
@@ -673,6 +760,37 @@ export async function fetchPayoutManagerStateById(payoutManagerFactory: Contract
  *     ]
  *   ]
  */
-export async function fetchWalletRecords(issuer: Contract): Promise<Array<Object>> {
+export async function fetchWalletRecords(issuer: Contract): Promise<Array<object>> {
   return issuer.getWalletRecords();
+}
+
+/**
+ * @param issuer Issuer contract instance
+ * @returns Array of issuer campaign records
+ */
+export async function fetchCampaignRecords(asset: Contract): Promise<Array<object>> {
+  return asset.getCampaignRecords();
+}
+
+/**
+ * @param queryService QueryService contract instance
+ * @param cfManagerFactory CfManagerFactory contract instance
+ * @param issuer Issuer contract instance
+ * @returns Array of campaign states for given issuer
+ */
+export async function queryCampaignsForIssuer(
+  queryService: Contract,
+  cfManagerFactory: Contract,
+  issuer: Contract
+): Promise<Array<Object>> {
+  return queryService.getCampaignsForIssuer(issuer.address, cfManagerFactory.address);
+}
+
+export async function queryCampaignsForIssuerInvestor(
+  queryService: Contract,
+  cfManagerFactory: Contract,
+  issuer: Contract,
+  investor: String
+): Promise<Array<Object>> {
+  return queryService.getCampaignsForIssuerInvestor(issuer.address, investor, cfManagerFactory.address);
 }

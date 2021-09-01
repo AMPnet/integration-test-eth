@@ -1,0 +1,6 @@
+{
+  "exclude": [
+    "util/deployer-service.ts",
+    "contracts"
+  ]
+}

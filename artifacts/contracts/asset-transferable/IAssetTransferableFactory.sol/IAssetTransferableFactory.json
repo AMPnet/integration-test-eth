@@ -1,0 +1,143 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IAssetTransferableFactory",
+  "sourceName": "contracts/asset-transferable/IAssetTransferableFactory.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "issuer",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "apxRegistry",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "ansName",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "initialTokenSupply",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "whitelistRequiredForRevenueClaim",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "whitelistRequiredForLiquidationClaim",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "info",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "childChainManager",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct Structs.AssetTransferableFactoryParams",
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "create",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInstances",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "issuer",
+          "type": "address"
+        }
+      ],
+      "name": "getInstancesForIssuer",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "issuer",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "ansName",
+          "type": "string"
+        }
+      ],
+      "name": "namespace",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

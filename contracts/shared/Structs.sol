@@ -10,6 +10,72 @@ contract Structs {
         uint256 timestamp;
     }
 
+    struct AssetRecord {
+        address originalToken;
+        address mirroredToken;
+        bool exists;
+        bool state;
+        uint256 stateUpdatedAt;
+        uint256 price;
+        uint256 pricePrecision;
+        uint256 priceUpdatedAt;
+        uint256 priceValidUntil;
+        address priceProvider;
+    }
+
+    struct TokenPriceRecord {
+        uint256 price;
+        uint256 updatedAtTimestamp;
+        uint256 validUntilTimestamp;
+        uint256 capturedSupply;
+        address provider;
+    }
+
+    struct AssetTransferableFactoryParams {
+        address creator;
+        address issuer;
+        address apxRegistry;
+        string ansName;
+        uint256 initialTokenSupply;
+        bool whitelistRequiredForRevenueClaim;
+        bool whitelistRequiredForLiquidationClaim;
+        string name;
+        string symbol;
+        string info;
+        address childChainManager;
+    }
+    
+    struct AssetConstructorParams {
+        uint256 id;
+        address owner;
+        address issuer;
+        address apxRegistry;
+        string ansName;
+        uint256 ansId;
+        uint256 initialTokenSupply;
+        bool whitelistRequiredForRevenueClaim;
+        bool whitelistRequiredForLiquidationClaim;
+        string name;
+        string symbol;
+        string info;
+    }
+
+    struct AssetTransferableConstructorParams {
+        uint256 id;
+        address owner;
+        address issuer;
+        address apxRegistry;
+        string ansName;
+        uint256 ansId;
+        uint256 initialTokenSupply;
+        bool whitelistRequiredForRevenueClaim;
+        bool whitelistRequiredForLiquidationClaim;
+        string name;
+        string symbol;
+        string info;
+        address childChainManager;
+    }
+
     struct AssetState {
         uint256 id;
         address contractAddress;
@@ -17,20 +83,50 @@ contract Structs {
         uint256 ansId;
         address createdBy;
         address owner;
-        address mirroredToken;
         uint256 initialTokenSupply;
-        bool whitelistRequiredForTransfer;
+        bool whitelistRequiredForRevenueClaim;
+        bool whitelistRequiredForLiquidationClaim;
         bool assetApprovedByIssuer;
         address issuer;
+        address apxRegistry;
         string info;
         string name;
         string symbol;
         uint256 totalAmountRaised;
         uint256 totalTokensSold;
+        uint256 highestTokenSellPrice;
+        uint256 totalTokensLocked;
+        uint256 totalTokensLockedAndLiquidated;
         bool liquidated;
+        uint256 liquidationFundsTotal;
         uint256 liquidationTimestamp;
-        uint256 liquidationSnapshotId;
         uint256 liquidationFundsClaimed;
+    }
+
+    struct AssetTransferableState {
+        uint256 id;
+        address contractAddress;
+        string ansName;
+        uint256 ansId;
+        address createdBy;
+        address owner;
+        uint256 initialTokenSupply;
+        bool whitelistRequiredForRevenueClaim;
+        bool whitelistRequiredForLiquidationClaim;
+        bool assetApprovedByIssuer;
+        address issuer;
+        address apxRegistry;
+        string info;
+        string name;
+        string symbol;
+        uint256 totalAmountRaised;
+        uint256 totalTokensSold;
+        uint256 highestTokenSellPrice;
+        bool liquidated;
+        uint256 liquidationFundsTotal;
+        uint256 liquidationTimestamp;
+        uint256 liquidationFundsClaimed;
+        address childChainManager;
     }
 
     struct IssuerState {
@@ -52,6 +148,7 @@ contract Structs {
         address createdBy;
         address owner;
         address asset;
+        address assetFactory;
         address issuer;
         uint256 tokenPrice;
         uint256 softCap;
@@ -77,6 +174,7 @@ contract Structs {
         address createdBy;
         address owner;
         address asset;
+        address assetFactory;
         uint256 totalPayoutsCreated;
         uint256 totalPayoutsAmount;
         string info;
