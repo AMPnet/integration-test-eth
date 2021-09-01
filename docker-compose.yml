@@ -30,7 +30,7 @@ services:
   hardhat:
     build:
       context: .
-      dockerfile: hh-docker/Dockerfile.hh
+      dockerfile: hh-docker/Dockerfile
     restart: always
     volumes:
       - ./:/app

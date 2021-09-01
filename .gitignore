@@ -121,3 +121,10 @@ typings/
 # End of https://www.gitignore.io/api/git,node,visualstudiocode
 
 .idea
+
+#Hardhat files
+cache
+artifacts
+
+#Env
+.env
