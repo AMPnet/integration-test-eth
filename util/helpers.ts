@@ -736,7 +736,7 @@ export async function fetchTxHistory(
   assetFactory: Contract,
   payoutManagerFactory: Contract
 ) {
-  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);;
+  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);
   const crowdfundingTransactions = await filters.getCrowdfundingCampaignTransactions(wallet, issuer, cfManagerFactory);
   const payoutManagerTransactions = await filters.getPayoutManagerTransactions(wallet, issuer, payoutManagerFactory);
   const transactions = assetTransactions.concat(crowdfundingTransactions).concat(payoutManagerTransactions);

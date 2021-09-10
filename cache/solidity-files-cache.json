@@ -1,10 +1,49 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/Users/eugen/programming/integration-test-eth/node_modules/hardhat/console.sol": {
-      "lastModificationDate": 1628598797626,
-      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
-      "sourceName": "hardhat/console.sol",
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/apx-protocol/ApxAssetsRegistry.sol": {
+      "lastModificationDate": 1631190282194,
+      "contentHash": "a3b9337c95cbc6ab3cb9990a9791b37b",
+      "sourceName": "contracts/apx-protocol/ApxAssetsRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./IApxAssetsRegistry.sol",
+        "../asset/IAsset.sol",
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ApxAssetsRegistry"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1631197456086,
+      "contentHash": "0eac3e1a83ee62326ca007811285b274",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -29,16 +68,16 @@
       },
       "imports": [],
       "versionPragmas": [
-        ">=0.4.22 <0.9.0"
+        "^0.8.0"
       ],
       "artifacts": [
-        "console"
+        "IERC20"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset/Asset.sol": {
-      "lastModificationDate": 1630487823605,
-      "contentHash": "b5c408b6cf6c50e537e3a63ab7abac5c",
-      "sourceName": "contracts/asset/Asset.sol",
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/apx-protocol/IApxAssetsRegistry.sol": {
+      "lastModificationDate": 1631190282194,
+      "contentHash": "6fdae2c6d2399319d54b7f854b4cad22",
+      "sourceName": "contracts/apx-protocol/IApxAssetsRegistry.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -62,138 +101,17 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
-        "../tokens/erc20/ERC20.sol",
-        "../tokens/erc20/ERC20Snapshot.sol",
-        "./IAsset.sol",
-        "../issuer/IIssuer.sol",
-        "../managers/crowdfunding-softcap/ICfManagerSoftcap.sol",
-        "../apx-protocol/IMirroredToken.sol",
-        "../tokens/erc20/IToken.sol",
         "../shared/Structs.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "Asset"
+        "IApxAssetsRegistry"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1630502178612,
-      "contentHash": "2cd550cedf51b8d294607dad5023d717",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "./extensions/IERC20Metadata.sol",
-        "../../utils/Context.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ERC20"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
-      "lastModificationDate": 1630502179429,
-      "contentHash": "d37406082a74a9b6b114de522fcb6349",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC20.sol",
-        "../../../utils/Address.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "SafeERC20"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol": {
-      "lastModificationDate": 1628598956701,
-      "contentHash": "285296268a10d1275677164d48b5c740",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../ERC20.sol",
-        "../../../utils/Arrays.sol",
-        "../../../utils/Counters.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ERC20Snapshot"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset/IAsset.sol": {
-      "lastModificationDate": 1630487823608,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset/IAsset.sol": {
+      "lastModificationDate": 1631190282203,
       "contentHash": "1cc1c4e3e0525fc91ad4baded7a30418",
       "sourceName": "contracts/asset/IAsset.sol",
       "solcConfig": {
@@ -230,80 +148,8 @@
         "IAsset"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/issuer/IIssuer.sol": {
-      "lastModificationDate": 1630487823624,
-      "contentHash": "84131c88641a005716ef626397b4fa91",
-      "sourceName": "contracts/issuer/IIssuer.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IIssuer"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/crowdfunding-softcap/ICfManagerSoftcap.sol": {
-      "lastModificationDate": 1630487823700,
-      "contentHash": "e26cc6ff57f3a6e65c5470903ef793b1",
-      "sourceName": "contracts/managers/crowdfunding-softcap/ICfManagerSoftcap.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ICfManagerSoftcap"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/shared/Structs.sol": {
-      "lastModificationDate": 1630487823637,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/shared/Structs.sol": {
+      "lastModificationDate": 1631190282209,
       "contentHash": "3a3d7b60d8bafbac5e0348544516999e",
       "sourceName": "contracts/shared/Structs.sol",
       "solcConfig": {
@@ -336,10 +182,47 @@
         "Structs"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1628598956709,
-      "contentHash": "0eac3e1a83ee62326ca007811285b274",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/erc20/IToken.sol": {
+      "lastModificationDate": 1631190282210,
+      "contentHash": "98c0db3fa2476c795593aa4a342febc7",
+      "sourceName": "contracts/tokens/erc20/IToken.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IToken"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/shared/IAssetCommon.sol": {
+      "lastModificationDate": 1631190282209,
+      "contentHash": "c95172535d9c4ef3f133a5e56c2f523d",
+      "sourceName": "contracts/shared/IAssetCommon.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -367,11 +250,11 @@
         "^0.8.0"
       ],
       "artifacts": [
-        "IERC20"
+        "IAssetCommon"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
-      "lastModificationDate": 1628598956709,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+      "lastModificationDate": 1631197456113,
       "contentHash": "aa1be06992a99bb7393b26a6af3c4dfb",
       "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
       "solcConfig": {
@@ -406,252 +289,8 @@
         "IERC20Metadata"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1630502178340,
-      "contentHash": "851485d5b925529b1a2f34a0be077891",
-      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Address.sol": {
-      "lastModificationDate": 1630502178279,
-      "contentHash": "c5f6c4e4df069c789e7d84b4c3011913",
-      "sourceName": "@openzeppelin/contracts/utils/Address.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Address"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Arrays.sol": {
-      "lastModificationDate": 1630502178285,
-      "contentHash": "b4a7cd9430208d853bff41b5338353ab",
-      "sourceName": "@openzeppelin/contracts/utils/Arrays.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./math/Math.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Arrays"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
-      "lastModificationDate": 1628598956692,
-      "contentHash": "b7811964d33f23b2d45ed3ebb76a4548",
-      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Counters"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
-      "lastModificationDate": 1630502179325,
-      "contentHash": "4e138d2b21c8844ab1799e37d232fb5e",
-      "sourceName": "@openzeppelin/contracts/utils/math/Math.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Math"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset/AssetFactory.sol": {
-      "lastModificationDate": 1630487823611,
-      "contentHash": "e3677b175d60c75db62e91207779d8e9",
-      "sourceName": "contracts/asset/AssetFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../asset/IAssetFactory.sol",
-        "../asset/Asset.sol",
-        "../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "AssetFactory"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset/IAssetFactory.sol": {
-      "lastModificationDate": 1630487823614,
-      "contentHash": "2a9c7ec50d3ab05832753110e7a6e100",
-      "sourceName": "contracts/asset/IAssetFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IAssetFactory"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/services/QueryService.sol": {
-      "lastModificationDate": 1630487823712,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/services/QueryService.sol": {
+      "lastModificationDate": 1631190282208,
       "contentHash": "0f0eb3686e6e2100e5622ba7afef6480",
       "sourceName": "contracts/services/QueryService.sol",
       "solcConfig": {
@@ -688,8 +327,8 @@
         "QueryService"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/crowdfunding-softcap/ICfManagerSoftcapFactory.sol": {
-      "lastModificationDate": 1628505280617,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/crowdfunding-softcap/ICfManagerSoftcapFactory.sol": {
+      "lastModificationDate": 1629977892724,
       "contentHash": "0883f06c6e486305a4506d5e48f9a14f",
       "sourceName": "contracts/managers/crowdfunding-softcap/ICfManagerSoftcapFactory.sol",
       "solcConfig": {
@@ -722,8 +361,44 @@
         "ICfManagerSoftcapFactory"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/services/DeployerService.sol": {
-      "lastModificationDate": 1630487823720,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/crowdfunding-softcap/ICfManagerSoftcap.sol": {
+      "lastModificationDate": 1629977892723,
+      "contentHash": "e26cc6ff57f3a6e65c5470903ef793b1",
+      "sourceName": "contracts/managers/crowdfunding-softcap/ICfManagerSoftcap.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ICfManagerSoftcap"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/services/DeployerService.sol": {
+      "lastModificationDate": 1631190282207,
       "contentHash": "8a233a1d27ececc5d411b0e88217ddd0",
       "sourceName": "contracts/services/DeployerService.sol",
       "solcConfig": {
@@ -767,8 +442,151 @@
         "DeployerService"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/issuer/IIssuerFactory.sol": {
-      "lastModificationDate": 1628505280557,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset/IAssetFactory.sol": {
+      "lastModificationDate": 1631190282203,
+      "contentHash": "2a9c7ec50d3ab05832753110e7a6e100",
+      "sourceName": "contracts/asset/IAssetFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IAssetFactory"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset-transferable/IAssetTransferable.sol": {
+      "lastModificationDate": 1631190282198,
+      "contentHash": "a5b003c0a9c08943eca211a1e398ddbf",
+      "sourceName": "contracts/asset-transferable/IAssetTransferable.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../shared/Structs.sol",
+        "../shared/IAssetCommon.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IAssetTransferable"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset-transferable/IAssetTransferableFactory.sol": {
+      "lastModificationDate": 1631190282198,
+      "contentHash": "8f3e13d3f081e15b7fbef71df92faae1",
+      "sourceName": "contracts/asset-transferable/IAssetTransferableFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IAssetTransferableFactory"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/issuer/IIssuer.sol": {
+      "lastModificationDate": 1629977892722,
+      "contentHash": "84131c88641a005716ef626397b4fa91",
+      "sourceName": "contracts/issuer/IIssuer.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IIssuer"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/issuer/IIssuerFactory.sol": {
+      "lastModificationDate": 1629977892723,
       "contentHash": "1c309f94ee0fddc971804e2bf3663839",
       "sourceName": "contracts/issuer/IIssuerFactory.sol",
       "solcConfig": {
@@ -801,46 +619,8 @@
         "IIssuerFactory"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/crowdfunding-softcap/CfManagerSoftcapFactory.sol": {
-      "lastModificationDate": 1630487823703,
-      "contentHash": "0bd541d1b13bf2be107ba8a584f641a3",
-      "sourceName": "contracts/managers/crowdfunding-softcap/CfManagerSoftcapFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./CfManagerSoftcap.sol",
-        "./ICfManagerSoftcapFactory.sol",
-        "../../asset/IAsset.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "CfManagerSoftcapFactory"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/crowdfunding-softcap/CfManagerSoftcap.sol": {
-      "lastModificationDate": 1630487823697,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/crowdfunding-softcap/CfManagerSoftcap.sol": {
+      "lastModificationDate": 1631190282205,
       "contentHash": "ef7b373fb5a87674ecbd88c2f9f8cb02",
       "sourceName": "contracts/managers/crowdfunding-softcap/CfManagerSoftcap.sol",
       "solcConfig": {
@@ -882,10 +662,10 @@
         "CfManagerSoftcap"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/services/WalletApproverService.sol": {
-      "lastModificationDate": 1630487823723,
-      "contentHash": "81c201943bdbd5007a763771598c8e71",
-      "sourceName": "contracts/services/WalletApproverService.sol",
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
+      "lastModificationDate": 1631197456771,
+      "contentHash": "d37406082a74a9b6b114de522fcb6349",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -909,17 +689,90 @@
         }
       },
       "imports": [
-        "../issuer/IIssuer.sol"
+        "../IERC20.sol",
+        "../../../utils/Address.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "WalletApproverService"
+        "SafeERC20"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/payout/PayoutManagerFactory.sol": {
-      "lastModificationDate": 1630487823689,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Address.sol": {
+      "lastModificationDate": 1631197453983,
+      "contentHash": "c5f6c4e4df069c789e7d84b4c3011913",
+      "sourceName": "@openzeppelin/contracts/utils/Address.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Address"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/crowdfunding-softcap/CfManagerSoftcapFactory.sol": {
+      "lastModificationDate": 1631190282205,
+      "contentHash": "0bd541d1b13bf2be107ba8a584f641a3",
+      "sourceName": "contracts/managers/crowdfunding-softcap/CfManagerSoftcapFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CfManagerSoftcap.sol",
+        "./ICfManagerSoftcapFactory.sol",
+        "../../asset/IAsset.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "CfManagerSoftcapFactory"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/payout/PayoutManagerFactory.sol": {
+      "lastModificationDate": 1629977892724,
       "contentHash": "a6b92d31bec57b631d6713c9c2df3b31",
       "sourceName": "contracts/managers/payout/PayoutManagerFactory.sol",
       "solcConfig": {
@@ -957,8 +810,8 @@
         "PayoutManagerFactory"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/payout/IPayoutManagerFactory.sol": {
-      "lastModificationDate": 1628505280603,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/payout/IPayoutManagerFactory.sol": {
+      "lastModificationDate": 1629977892724,
       "contentHash": "260f4b01566830f8e684c1af1c34aa85",
       "sourceName": "contracts/managers/payout/IPayoutManagerFactory.sol",
       "solcConfig": {
@@ -991,8 +844,8 @@
         "IPayoutManagerFactory"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/payout/PayoutManager.sol": {
-      "lastModificationDate": 1630487823679,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/payout/PayoutManager.sol": {
+      "lastModificationDate": 1631190282207,
       "contentHash": "29f437a44efe5a85b1c5060ae20ad3ce",
       "sourceName": "contracts/managers/payout/PayoutManager.sol",
       "solcConfig": {
@@ -1034,8 +887,8 @@
         "PayoutManager"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/payout/IPayoutManager.sol": {
-      "lastModificationDate": 1630487823685,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/payout/IPayoutManager.sol": {
+      "lastModificationDate": 1631190282206,
       "contentHash": "e151d2fb6ce197205e36ada34cda4f99",
       "sourceName": "contracts/managers/payout/IPayoutManager.sol",
       "solcConfig": {
@@ -1070,8 +923,8 @@
         "IPayoutManager"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/managers/payout/IERC20Snapshot.sol": {
-      "lastModificationDate": 1630487823683,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/managers/payout/IERC20Snapshot.sol": {
+      "lastModificationDate": 1631190282206,
       "contentHash": "d78006fedbe5ffa375256e7024271ed6",
       "sourceName": "contracts/managers/payout/IERC20Snapshot.sol",
       "solcConfig": {
@@ -1104,10 +957,10 @@
         "IERC20Snapshot"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/issuer/Issuer.sol": {
-      "lastModificationDate": 1630487823620,
-      "contentHash": "374bbd8e671aa1ec124bb76623db3738",
-      "sourceName": "contracts/issuer/Issuer.sol",
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/services/WalletApproverService.sol": {
+      "lastModificationDate": 1631190282209,
+      "contentHash": "81c201943bdbd5007a763771598c8e71",
+      "sourceName": "contracts/services/WalletApproverService.sol",
       "solcConfig": {
         "version": "0.8.0",
         "settings": {
@@ -1131,274 +984,17 @@
         }
       },
       "imports": [
-        "../issuer/IIssuer.sol",
-        "../shared/Structs.sol"
+        "../issuer/IIssuer.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
       ],
       "artifacts": [
-        "Issuer"
+        "WalletApproverService"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/issuer/IssuerFactory.sol": {
-      "lastModificationDate": 1630487823628,
-      "contentHash": "f36f223715eecbcbb580712618a51641",
-      "sourceName": "contracts/issuer/IssuerFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./Issuer.sol",
-        "./IIssuerFactory.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IssuerFactory"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/apx-protocol/ApxAssetsRegistry.sol": {
-      "lastModificationDate": 1630487823737,
-      "contentHash": "a3b9337c95cbc6ab3cb9990a9791b37b",
-      "sourceName": "contracts/apx-protocol/ApxAssetsRegistry.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "./IApxAssetsRegistry.sol",
-        "../asset/IAsset.sol",
-        "../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ApxAssetsRegistry"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/apx-protocol/IApxAssetsRegistry.sol": {
-      "lastModificationDate": 1630487823740,
-      "contentHash": "6fdae2c6d2399319d54b7f854b4cad22",
-      "sourceName": "contracts/apx-protocol/IApxAssetsRegistry.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IApxAssetsRegistry"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/erc20/IToken.sol": {
-      "lastModificationDate": 1630487823652,
-      "contentHash": "98c0db3fa2476c795593aa4a342febc7",
-      "sourceName": "contracts/tokens/erc20/IToken.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IToken"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/shared/IAssetCommon.sol": {
-      "lastModificationDate": 1630487823640,
-      "contentHash": "c95172535d9c4ef3f133a5e56c2f523d",
-      "sourceName": "contracts/shared/IAssetCommon.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IAssetCommon"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset-transferable/IAssetTransferable.sol": {
-      "lastModificationDate": 1630487823749,
-      "contentHash": "a5b003c0a9c08943eca211a1e398ddbf",
-      "sourceName": "contracts/asset-transferable/IAssetTransferable.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../shared/Structs.sol",
-        "../shared/IAssetCommon.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IAssetTransferable"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset-transferable/IAssetTransferableFactory.sol": {
-      "lastModificationDate": 1630487823755,
-      "contentHash": "8f3e13d3f081e15b7fbef71df92faae1",
-      "sourceName": "contracts/asset-transferable/IAssetTransferableFactory.sol",
-      "solcConfig": {
-        "version": "0.8.0",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../shared/Structs.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IAssetTransferableFactory"
-      ]
-    },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset-transferable/AssetTransferable.sol": {
-      "lastModificationDate": 1630487823746,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset-transferable/AssetTransferable.sol": {
+      "lastModificationDate": 1631190282197,
       "contentHash": "4f97dca8046ea0db180c789c24e189e4",
       "sourceName": "contracts/asset-transferable/AssetTransferable.sol",
       "solcConfig": {
@@ -1442,8 +1038,8 @@
         "AssetTransferable"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/erc20/ERC20.sol": {
-      "lastModificationDate": 1630487823649,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/erc20/ERC20.sol": {
+      "lastModificationDate": 1631190282210,
       "contentHash": "a63e4849713335467caf30327f36b3ff",
       "sourceName": "contracts/tokens/erc20/ERC20.sol",
       "solcConfig": {
@@ -1479,8 +1075,8 @@
         "ERC20"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/erc20/ERC20Snapshot.sol": {
-      "lastModificationDate": 1630487823654,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/erc20/ERC20Snapshot.sol": {
+      "lastModificationDate": 1631190282210,
       "contentHash": "593709e837b04d69f4c7bd7f309e7d01",
       "sourceName": "contracts/tokens/erc20/ERC20Snapshot.sol",
       "solcConfig": {
@@ -1517,8 +1113,8 @@
         "ERC20Snapshot"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/matic/IChildToken.sol": {
-      "lastModificationDate": 1630487823664,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/matic/IChildToken.sol": {
+      "lastModificationDate": 1631190282210,
       "contentHash": "50498c99aa04f95f5a563fc40b090196",
       "sourceName": "contracts/tokens/matic/IChildToken.sol",
       "solcConfig": {
@@ -1551,8 +1147,146 @@
         "IChildToken"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/asset-transferable/AssetTransferableFactory.sol": {
-      "lastModificationDate": 1630487823752,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Context.sol": {
+      "lastModificationDate": 1631197454120,
+      "contentHash": "851485d5b925529b1a2f34a0be077891",
+      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Arrays.sol": {
+      "lastModificationDate": 1631197454001,
+      "contentHash": "b4a7cd9430208d853bff41b5338353ab",
+      "sourceName": "@openzeppelin/contracts/utils/Arrays.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./math/Math.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Arrays"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
+      "lastModificationDate": 1631197454124,
+      "contentHash": "b7811964d33f23b2d45ed3ebb76a4548",
+      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Counters"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
+      "lastModificationDate": 1631197456484,
+      "contentHash": "4e138d2b21c8844ab1799e37d232fb5e",
+      "sourceName": "@openzeppelin/contracts/utils/math/Math.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Math"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset-transferable/AssetTransferableFactory.sol": {
+      "lastModificationDate": 1631190282198,
       "contentHash": "6303ab663f0800c85dcc3969dc4e2f45",
       "sourceName": "contracts/asset-transferable/AssetTransferableFactory.sol",
       "solcConfig": {
@@ -1589,8 +1323,52 @@
         "AssetTransferableFactory"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/apx-protocol/IMirroredToken.sol": {
-      "lastModificationDate": 1630487823734,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset/Asset.sol": {
+      "lastModificationDate": 1631190282199,
+      "contentHash": "b5c408b6cf6c50e537e3a63ab7abac5c",
+      "sourceName": "contracts/asset/Asset.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+        "../tokens/erc20/ERC20.sol",
+        "../tokens/erc20/ERC20Snapshot.sol",
+        "./IAsset.sol",
+        "../issuer/IIssuer.sol",
+        "../managers/crowdfunding-softcap/ICfManagerSoftcap.sol",
+        "../apx-protocol/IMirroredToken.sol",
+        "../tokens/erc20/IToken.sol",
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Asset"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/apx-protocol/IMirroredToken.sol": {
+      "lastModificationDate": 1631190282194,
       "contentHash": "a621b613a6e7bbe65a0c69f6800769f7",
       "sourceName": "contracts/apx-protocol/IMirroredToken.sol",
       "solcConfig": {
@@ -1623,8 +1401,46 @@
         "IMirroredToken"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/apx-protocol/MirroredToken.sol": {
-      "lastModificationDate": 1630487823731,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/asset/AssetFactory.sol": {
+      "lastModificationDate": 1631190282203,
+      "contentHash": "e3677b175d60c75db62e91207779d8e9",
+      "sourceName": "contracts/asset/AssetFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../asset/IAssetFactory.sol",
+        "../asset/Asset.sol",
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AssetFactory"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/apx-protocol/MirroredToken.sol": {
+      "lastModificationDate": 1631190282194,
       "contentHash": "01ae7e6affff24620353b058f6241f8f",
       "sourceName": "contracts/apx-protocol/MirroredToken.sol",
       "solcConfig": {
@@ -1665,8 +1481,46 @@
         "MirroredToken"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/stablecoin/USDC.sol": {
-      "lastModificationDate": 1630487823670,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 1631197454754,
+      "contentHash": "2cd550cedf51b8d294607dad5023d717",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC20.sol",
+        "./extensions/IERC20Metadata.sol",
+        "../../utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC20"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/stablecoin/USDC.sol": {
+      "lastModificationDate": 1631190282211,
       "contentHash": "cca921dbd989ac9baadee791f6b1052e",
       "sourceName": "contracts/tokens/stablecoin/USDC.sol",
       "solcConfig": {
@@ -1701,8 +1555,82 @@
         "USDC"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/services/GlobalService.sol": {
-      "lastModificationDate": 1630487823716,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/issuer/Issuer.sol": {
+      "lastModificationDate": 1631190282204,
+      "contentHash": "374bbd8e671aa1ec124bb76623db3738",
+      "sourceName": "contracts/issuer/Issuer.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../issuer/IIssuer.sol",
+        "../shared/Structs.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Issuer"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/issuer/IssuerFactory.sol": {
+      "lastModificationDate": 1629977892723,
+      "contentHash": "f36f223715eecbcbb580712618a51641",
+      "sourceName": "contracts/issuer/IssuerFactory.sol",
+      "solcConfig": {
+        "version": "0.8.0",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Issuer.sol",
+        "./IIssuerFactory.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IssuerFactory"
+      ]
+    },
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/services/GlobalService.sol": {
+      "lastModificationDate": 1631190282208,
       "contentHash": "7af76d11a479fa93857780510273ac82",
       "sourceName": "contracts/services/GlobalService.sol",
       "solcConfig": {
@@ -1735,8 +1663,8 @@
         "GlobalService"
       ]
     },
-    "/Users/eugen/programming/integration-test-eth/contracts/tokens/matic/IRootToken.sol": {
-      "lastModificationDate": 1630487823661,
+    "/Users/josipkoncurat/Documents/AMPnet/integration-test-eth/contracts/tokens/matic/IRootToken.sol": {
+      "lastModificationDate": 1631190282211,
       "contentHash": "7d72f8dea4a2b30202a81d7fc5127eca",
       "sourceName": "contracts/tokens/matic/IRootToken.sol",
       "solcConfig": {
