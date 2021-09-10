@@ -167,17 +167,16 @@ describe("Whitelist user address", function () {
         const franksInvestmentWei = ethers.utils.parseEther(franksInvestment.toString())
         await stablecoin.transfer(franksAddress, franksInvestmentWei)
 
-        //// Frank invests $100k USDC in the project and then cancels her investment and then invests again
+        //// Frank invests $100k USDC in the project and then cancels her/his investment and then invests again
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
         await helpers.cancelInvest(frank, cfManager)
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
-
+        await new Promise(f => setTimeout(f, 200))
         // Get transaction history
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, issuer.address, await issuerOwner.getChainId())
-        // Uncomment after the report-service is fixed
-        // console.log("TxHistory: ", await txHistory?.data)
-        // expect(await txHistory?.data.transactions.size).is.equal(3)
+        const txHistoryData = await txHistory?.data
+        expect(await txHistory?.data.transactions.length).is.equal(3)
     })
 
     after(async function () {
