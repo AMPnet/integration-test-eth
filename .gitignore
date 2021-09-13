@@ -123,8 +123,8 @@ typings/
 .idea
 
 #Hardhat files
-cache
-artifacts
+cache/
+artifacts/
 
 #Env
 .env

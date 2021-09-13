@@ -9,6 +9,7 @@ import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
 import * as reportService from "../util/report-service";
 import * as deployerServiceUtil from "../util/deployer-service";
+import * as db from "../util/db"
 
 describe("Whitelist user address", function () {
 
@@ -180,6 +181,7 @@ describe("Whitelist user address", function () {
     })
 
     after(async function () {
+        await db.clearAllTasks()
         await docker.down()
     })
 })
