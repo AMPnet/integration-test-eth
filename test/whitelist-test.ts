@@ -152,7 +152,6 @@ describe("Whitelist user address", function () {
 
         await new Promise(f => setTimeout(f, 5000))
         const isWalletApproved = await issuer.isWalletApproved(franksAddress)
-        console.log("Wallet approved: ", isWalletApproved)
         expect(isWalletApproved).to.be.true
 
         // Generate xlsx report
@@ -172,11 +171,11 @@ describe("Whitelist user address", function () {
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
         await helpers.cancelInvest(frank, cfManager)
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
-        await new Promise(f => setTimeout(f, 200))
+
         // Get transaction history
+        await new Promise(f => setTimeout(f, 500))
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, issuer.address, await issuerOwner.getChainId())
-        const txHistoryData = await txHistory?.data
         expect(await txHistory?.data.transactions.length).is.equal(3)
     })
 
