@@ -25,7 +25,7 @@ services:
     depends_on:
        - db
     ports:
-       - 8136:8136
+       - "8136:8136"
 
   hardhat:
     build:
@@ -36,7 +36,7 @@ services:
       - ./:/app
       - /app/node_modules
     ports:
-      - 8545:8545
+      - "8545:8545"
 
   report-service:
    image: ampnet/report-service-eth:latest
@@ -51,5 +51,9 @@ services:
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.num-of-confirmations=0"
      - "com.ampnet.reportserviceeth.chain-mumbai.cf-manager-factory-address="
      - "com.ampnet.reportserviceeth.chain-mumbai.payout-manager-factory-address="
+     - "com.ampnet.reportserviceeth.chain-matic.cf-manager-factory-address="
+     - "com.ampnet.reportserviceeth.chain-matic.payout-manager-factory-address="
+     - "com.ampnet.reportserviceeth.chain-ethereum.cf-manager-factory-address="
+     - "com.ampnet.reportserviceeth.chain-ethereum.payout-manager-factory-address="
    ports:
-     - 8137:8137
+     - "8137:8137"
