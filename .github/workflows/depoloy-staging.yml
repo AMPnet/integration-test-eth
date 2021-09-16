@@ -42,3 +42,4 @@ jobs:
             cd /root/eth-compose
             docker-compose pull
             docker-compose up -d
+            docker-compose restart nginx
