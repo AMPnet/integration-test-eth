@@ -170,13 +170,12 @@ describe("Whitelist user address", function () {
         //// Frank invests $100k USDC in the project and then cancels her/his investment and then invests again
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
         await helpers.cancelInvest(frank, cfManager)
-        await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
 
         // Get transaction history
         await new Promise(f => setTimeout(f, 500))
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, issuer.address, await issuerOwner.getChainId())
-        expect(await txHistory?.data.transactions.length).is.equal(3)
+        expect(await txHistory?.data.transactions.length).is.equal(2)
     })
 
     after(async function () {
