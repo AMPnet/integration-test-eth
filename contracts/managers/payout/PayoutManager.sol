@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../../asset/IAsset.sol";
 import "../../issuer/IIssuer.sol";
+import "../../asset/IAsset.sol";
 import "../payout/IPayoutManager.sol";
 import "./IERC20Snapshot.sol";
 import "../../shared/Structs.sol";
@@ -35,25 +35,21 @@ contract PayoutManager is IPayoutManager {
     //  CONSTRUCTOR
     //------------------------
     constructor(
-        uint256 id,
+        string memory contractFlavor,
+        string memory contractVersion,
         address owner,
-        string memory ansName,
-        uint256 ansId,
         address assetAddress,
         string memory info
     ) {
         require(owner != address(0), "PayoutManager: invalid owner");
         require(assetAddress != address(0), "PayoutManager: invalid asset address");
-        address assetFactory = IAssetCommon(assetAddress).getAssetFactory();
+        address assetFactory = IAssetCommon(assetAddress).commonState().issuer;
         state = Structs.PayoutManagerState(
-            id,
+            contractFlavor,
+            contractVersion,
             address(this),
-            ansName,
-            ansId,
-            msg.sender,
             owner,
             assetAddress,
-            assetFactory,
             0, 0,
             info
         );
@@ -73,7 +69,7 @@ contract PayoutManager is IPayoutManager {
     function createPayout(string memory description, uint256 amount, address[] memory ignored) external onlyOwner {
         require(amount > 0, "PayoutManager: invalid payout amount provided");
         _stablecoin().transferFrom(msg.sender, address(this), amount);
-        uint256 snapshotId = _asset().snapshot();
+        uint256 snapshotId = IAsset(state.asset).snapshot();
         uint256 payoutId = payouts.length;
         Structs.Payout storage payout = payouts.push();
         payout.snapshotId = snapshotId;
@@ -166,12 +162,12 @@ contract PayoutManager is IPayoutManager {
         return IERC20(_issuer().getState().stablecoin);
     }
 
-    function _asset() private view returns (IAsset) {
-        return IAsset(state.asset);
+    function _asset() private view returns (IAssetCommon) {
+        return IAssetCommon(state.asset);
     }
 
     function _issuer() private view returns (IIssuer) {
-        return IIssuer(_asset().getState().issuer);
+        return IIssuer(_asset().commonState().issuer);
     }
 
 }

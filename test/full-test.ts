@@ -11,7 +11,7 @@ import * as reportService from "../util/report-service";
 import * as deployerServiceUtil from "../util/deployer-service";
 import * as db from "../util/db"
 
-describe("Whitelist user address", function () {
+describe("Full flow test", function () {
 
     //////// FACTORIES ////////
     let issuerFactory: Contract;
@@ -27,6 +27,7 @@ describe("Whitelist user address", function () {
 
     ////////// APX //////////
     let apxRegistry: Contract;
+    let nameRegistry: Contract;
 
     //////// SIGNERS ////////
     let deployer: Signer;
@@ -49,23 +50,15 @@ describe("Whitelist user address", function () {
 
         const accounts: Signer[] = await ethers.getSigners();
         deployer        = accounts[0];
-        issuerOwner     = accounts[1];
+        assetManager    = accounts[1];
         priceManager    = accounts[2];
-        alice           = accounts[3];
-        jane            = accounts[4];
-        frank           = accounts[5];
-        walletApprover  = accounts[6];
-        assetManager    = accounts[7];
-
-        console.log("Deployer: ", await deployer.getAddress())
+        walletApprover  = accounts[3];
+        issuerOwner     = accounts[4];
+        alice           = accounts[5];
+        jane            = accounts[6];
+        frank           = accounts[7];
 
         stablecoin = await helpers.deployStablecoin(deployer, "1000000000000");
-        apxRegistry = await helpers.deployApxRegistry(
-            deployer,
-            await deployer.getAddress(),
-            await assetManager.getAddress(),
-            await priceManager.getAddress()
-        );
 
         const factories = await helpers.deployFactories(deployer);
         issuerFactory = factories[0];
@@ -73,6 +66,18 @@ describe("Whitelist user address", function () {
         assetTransferableFactory = factories[2];
         cfManagerFactory = factories[3];
         payoutManagerFactory = factories[4];
+
+        apxRegistry = await helpers.deployApxRegistry(
+            deployer,
+            await deployer.getAddress(),
+            await assetManager.getAddress(),
+            await priceManager.getAddress()
+        );
+        nameRegistry = await helpers.deployNameRegistry(
+            deployer,
+            await deployer.getAddress(),
+            factories.map(factory => factory.address)
+        );
 
         const walletApproverAddress = await walletApprover.getAddress();
         const services = await helpers.deployServices(
@@ -85,7 +90,7 @@ describe("Whitelist user address", function () {
         queryService = services[2];
     });
 
-    it("Should whitelist user", async function () {
+    it("Should whitelist user and get tx history", async function () {
         //// Set the config for Issuer, Asset and Crowdfunding Campaign
         const issuerAnsName = "test-issuer";
         const issuerInfoHash = "issuer-info-ipfs-hash";
@@ -114,7 +119,8 @@ describe("Whitelist user address", function () {
             stablecoin,
             walletApproverService.address,
             issuerInfoHash,
-            issuerFactory
+            issuerFactory,
+            nameRegistry
         );
         const contracts = await deployerServiceUtil.createAssetTransferableCampaign(
             issuer,
@@ -136,6 +142,7 @@ describe("Whitelist user address", function () {
             campaignWhitelistRequired,
             campaignInfoHash,
             apxRegistry.address,
+            nameRegistry.address,
             childChainManager,
             assetTransferableFactory,
             cfManagerFactory,
@@ -180,7 +187,7 @@ describe("Whitelist user address", function () {
     })
 
     after(async function () {
-        await db.clearAllTasks()
+        await db.clearDb()
         await docker.down()
     })
 })
