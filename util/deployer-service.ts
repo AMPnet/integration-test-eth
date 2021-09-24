@@ -3,19 +3,19 @@ import {Contract} from "ethers";
 
 export async function createIssuerAssetCampaign(
     issuerOwner: String,
-    issuerAnsName: String,
+    issuerMappedName: String,
     issuerStablecoin: String,
     issuerWalletApprover: String,
     issuerInfo: String,
     assetOwner: String,
-    assetAnsName: String,
+    assetMappedName: String,
     assetInitialTokenSupply: Number,
     assetWhitelistRequired: boolean,
     assetName: String,
     assetSymbol: String,
     assetInfo: String,
     cfManagerOwner: String,
-    cfManagerAnsName: String,
+    cfManagerMappedName: String,
     cfManagerPricePerToken: Number,
     cfManagerSoftcap: Number,
     cfManagerMinInvestment: Number,
@@ -41,19 +41,19 @@ export async function createIssuerAssetCampaign(
             assetFactory.address,
             cfManagerFactory.address,
             issuerOwner,
-            issuerAnsName,
+            issuerMappedName,
             issuerStablecoin,
             issuerWalletApprover,
             issuerInfo,
             assetOwner,
-            assetAnsName,
+            assetMappedName,
             assetInitialTokenSupplyWei,
             assetWhitelistRequired,
             assetName,
             assetSymbol,
             assetInfo,
             cfManagerOwner,
-            cfManagerAnsName,
+            cfManagerMappedName,
             cfManagerPricePerToken,
             cfManagerSoftcapWei,
             cfManagerMinInvestmentWei,
@@ -105,6 +105,7 @@ export async function createIssuerAssetCampaign(
     const issuer = await ethers.getContractAt("Issuer", issuerAddress);
     const asset = await ethers.getContractAt("Asset", assetAddress);
     const campaign = await ethers.getContractAt("CfManagerSoftcap", cfManagerAddress);
+
     return [issuer, asset, campaign];
 }
 
@@ -192,6 +193,7 @@ export async function createAssetCampaign(
     }
     const asset = await ethers.getContractAt("Asset", assetAddress);
     const campaign = await ethers.getContractAt("CfManagerSoftcap", cfManagerAddress);
+
     return [asset, campaign];
 }
 
@@ -303,6 +305,7 @@ export async function createIssuerAssetTransferableCampaign(
     const issuer = await ethers.getContractAt("Issuer", issuerAddress);
     const assetTransferable = await ethers.getContractAt("AssetTransferable", assetTransferableAddress);
     const campaign = await ethers.getContractAt("CfManagerSoftcap", cfManagerAddress);
+
     return [issuer, assetTransferable, campaign];
 }
 
@@ -392,5 +395,6 @@ export async function createAssetTransferableCampaign(
     }
     const assetTransferable = await ethers.getContractAt("AssetTransferable", assetTransferableAddress);
     const campaign = await ethers.getContractAt("CfManagerSoftcap", cfManagerAddress);
+
     return [assetTransferable, campaign];
 }
