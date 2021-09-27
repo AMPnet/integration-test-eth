@@ -188,6 +188,6 @@ describe("Full flow test", function () {
 
     after(async function () {
         await db.clearDb()
-        // await docker.down()
+        await docker.down()
     })
 })
