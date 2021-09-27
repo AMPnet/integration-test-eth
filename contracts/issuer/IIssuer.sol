@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "../shared/IIssuerCommon.sol";
 import "../shared/Structs.sol";
 
-interface IIssuer {
+interface IIssuer is IIssuerCommon {
 
     // Write
 
-    function setInfo(string memory info) external;
     function approveWallet(address wallet) external;
     function suspendWallet(address wallet) external;
     function changeOwnership(address newOwner) external;

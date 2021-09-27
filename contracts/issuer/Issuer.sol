@@ -26,9 +26,9 @@ contract Issuer is IIssuer {
     //  CONSTRUCTOR
     //------------------------
     constructor(
-        uint256 id,
+        string memory issuerFlavor,
+        string memory issuerVersion,
         address owner,
-        string memory ansName,
         address stablecoin,
         address walletApprover,
         string memory info
@@ -42,15 +42,15 @@ contract Issuer is IIssuer {
             block.timestamp
         ));
         state = Structs.IssuerState(
-            id,
+            issuerFlavor,
+            issuerVersion,
             address(this),
-            ansName,
-            msg.sender,
             owner,
             stablecoin,
             walletApprover,
             info
         );
+        _setWalletState(owner, true);
     }
 
     //------------------------
@@ -109,12 +109,24 @@ contract Issuer is IIssuer {
         emit ChangeWalletApprover(msg.sender, state.walletApprover, newWalletApprover, block.timestamp);
     }
 
+    function flavor() external view override returns (string memory) { return state.flavor; }
+
+    function version() external view override returns (string memory) { return state.version; }
+
+    function commonState() external view override returns (Structs.IssuerCommonState memory) {
+        return Structs.IssuerCommonState(
+            state.flavor,
+            state.version,
+            state.contractAddress,
+            state.owner,
+            state.info
+        );
+    }
+
     function getState() external override view returns (Structs.IssuerState memory) { return state; }
     
     function isWalletApproved(address wallet) external view override returns (bool) {
-        return
-            wallet == state.owner ||
-            (_addressExists(wallet) && approvedWallets[approvedWalletsMap[wallet]].whitelisted);
+        return (_addressExists(wallet) && approvedWallets[approvedWalletsMap[wallet]].whitelisted);
     }
 
     function getInfoHistory() external view override returns (Structs.InfoEntry[] memory) {

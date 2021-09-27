@@ -4,9 +4,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IApxAssetsRegistry.sol";
 import "../asset/IAsset.sol";
+import "../tokens/erc20/IToken.sol";
 import "../shared/Structs.sol";
 
 contract ApxAssetsRegistry is IApxAssetsRegistry {
+
+    string constant public FLAVOR = "ApxAssetsRegistryV1";
+    string constant public VERSION = "1.0.14";
 
     //------------------------
     //  STATE
@@ -124,16 +128,17 @@ contract ApxAssetsRegistry is IApxAssetsRegistry {
     function updatePrice(
         address asset,
         uint256 price,
-        uint256 pricePrecision,
-        uint256 expiry
+        uint256 expiry,
+        uint256 capturedSupply
     ) external override onlyPriceManagerOrMasterOwner assetExists(asset) {
         require(assets[asset].state, "ApxAssetsRegistry: Can update price for approved assets only.");
         require(price > 0, "MirroredToken: price has to be > 0;");
         require(expiry > 0, "MirroredToken: expiry has to be > 0;");
+        require(capturedSupply == IToken(asset).totalSupply(), "MirroredToken: inconsistent asset supply.");
         assets[asset].price = price;
-        assets[asset].pricePrecision = pricePrecision;
         assets[asset].priceUpdatedAt = block.timestamp;
         assets[asset].priceValidUntil = block.timestamp + expiry;
+        assets[asset].capturedSupply = capturedSupply;
         assets[asset].priceProvider = msg.sender;
         emit UpdatePrice(msg.sender, asset, price, expiry, block.timestamp);
     }
@@ -153,6 +158,10 @@ contract ApxAssetsRegistry is IApxAssetsRegistry {
     //---------------------------------
     //  IApxAssetsRegistry IMPL - Read
     //---------------------------------
+    function flavor() external pure override returns (string memory) { return FLAVOR; }
+    
+    function version() external pure override returns (string memory) { return VERSION; }
+    
     function getMirrored(address asset) external view override returns (Structs.AssetRecord memory) {
         return assets[asset];
     }

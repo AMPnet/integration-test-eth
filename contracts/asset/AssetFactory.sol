@@ -2,55 +2,33 @@
 pragma solidity ^0.8.0;
 
 import "../asset/IAssetFactory.sol";
-import "../asset/Asset.sol";
+import "../deployers/IAssetDeployer.sol";
 import "../shared/Structs.sol";
+import "../registry/INameRegistry.sol";
 
 contract AssetFactory is IAssetFactory {
-    
-    event AssetCreated(address indexed creator, address asset, uint256 id, uint256 timestamp);
 
+    string constant public FLAVOR = "AssetV1";
+    string constant public VERSION = "1.0.14";
+
+    address public deployer;
     address[] public instances;
     mapping (address => address[]) instancesPerIssuer;
-    mapping (address => mapping (string => address)) public override namespace;
 
-    function create(
-        address creator,
-        address issuer,
-        address apxRegistry,
-        string memory ansName,
-        uint256 initialTokenSupply,
-        bool whitelistRequiredForRevenueClaim,
-        bool whitelistRequiredForLiquidationClaim,
-        string memory name,
-        string memory symbol,
-        string memory info
-    ) public override returns (address)
-    {
-        require(namespace[issuer][ansName] == address(0), "AssetFactory: asset with this name already exists");
-        uint256 id = instances.length;
-        uint256 ansId = instancesPerIssuer[issuer].length;
-        address asset = 
-            address(
-                new Asset(
-                    Structs.AssetConstructorParams(
-                        id,
-                        creator,
-                        issuer,
-                        apxRegistry,
-                        ansName,
-                        ansId,
-                        initialTokenSupply,
-                        whitelistRequiredForRevenueClaim,
-                        whitelistRequiredForLiquidationClaim,
-                        name,
-                        symbol,
-                        info
-                    )
-        ));
+    event AssetCreated(address indexed creator, address asset, uint256 timestamp);
+
+    constructor(address _deployer) { deployer = _deployer; }
+
+    function create(Structs.AssetFactoryParams memory params) public override returns (address) {
+        INameRegistry nameRegistry = INameRegistry(params.nameRegistry);
+        require(
+            nameRegistry.getAsset(params.mappedName) == address(0),
+            "AssetFactory: asset with this name already exists"
+        );
+        address asset = IAssetDeployer(deployer).create(FLAVOR, VERSION, params);
         instances.push(asset);
-        instancesPerIssuer[issuer].push(asset);
-        namespace[issuer][ansName] = asset;
-        emit AssetCreated(creator, asset, id, block.timestamp);
+        instancesPerIssuer[params.issuer].push(asset);
+        emit AssetCreated(params.creator, asset, block.timestamp);
         return asset;
     }
 
