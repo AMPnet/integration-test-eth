@@ -15,7 +15,7 @@ import "../registry/INameRegistry.sol";
 contract QueryService is IVersioned {
 
     string constant public FLAVOR = "QueryServiceV1";
-    string constant public VERSION = "1.0.14";
+    string constant public VERSION = "1.0.15";
 
     function flavor() external pure override returns (string memory) { return FLAVOR; }
     function version() external pure override returns (string memory) { return VERSION; } 
@@ -342,8 +342,8 @@ contract QueryService is IVersioned {
                     assetInterface.commonState(),
                     nameRegistry.getAssetName(instances[j])
                 );
+                position++;
             }
-            position++;
         }
 
         return response; 

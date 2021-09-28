@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./CfManagerSoftcap.sol";
-import "./ICfManagerSoftcapFactory.sol";
+import "./CfManagerSoftcapVesting.sol";
+import "./ICfManagerSoftcapVestingFactory.sol";
 import "../../shared/IAssetCommon.sol";
 import "../../registry/INameRegistry.sol";
 
-contract CfManagerSoftcapFactory is ICfManagerSoftcapFactory {
+contract CfManagerSoftcapVestingFactory is ICfManagerSoftcapVestingFactory {
     
-    string constant public FLAVOR = "CfManagerSoftcapV1";
+    string constant public FLAVOR = "CfManagerSoftcapVestingV1";
     string constant public VERSION = "1.0.15";
     
     address[] public instances;
@@ -39,7 +39,7 @@ contract CfManagerSoftcapFactory is ICfManagerSoftcapFactory {
             registry.getCampaign(mappedName) == address(0),
             "CfManagerSoftcapFactory: campaign with this name already exists"
         );
-        address cfManagerSoftcap = address(new CfManagerSoftcap(
+        address cfManagerSoftcap = address(new CfManagerSoftcapVesting(
             FLAVOR,
             VERSION,
             owner,
