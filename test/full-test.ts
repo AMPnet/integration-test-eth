@@ -180,7 +180,7 @@ describe("Full flow test", function () {
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
 
         // Get transaction history
-        await new Promise(f => setTimeout(f, 1000))
+        await new Promise(f => setTimeout(f, 2000))
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, issuer.address, await issuerOwner.getChainId())
         expect(await txHistory?.data.transactions.length).is.equal(3)

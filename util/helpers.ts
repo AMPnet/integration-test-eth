@@ -171,14 +171,11 @@ export async function createIssuer(
     nameRegistry.address
   );
   const receipt = await ethers.provider.waitForTransaction(issuerTx.hash);
-  console.log("issuer deployed, scanning for events", receipt)
   for (const log of receipt.logs) {
     try {
       const parsedLog = issuerFactory.interface.parseLog(log);
-      console.log("parsedLog", parsedLog);
       if (parsedLog.name == "IssuerCreated") {
         const ownerAddress = parsedLog.args.creator;
-        console.log("parsed creator", ownerAddress);
         const issuerAddress = parsedLog.args.issuer;
         console.log(`\nIssuer deployed\n\tAt address: ${issuerAddress}\n\tOwner: ${ownerAddress}`);
         return (await ethers.getContractAt("Issuer", issuerAddress));
