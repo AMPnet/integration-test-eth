@@ -179,6 +179,9 @@ describe("Full flow test", function () {
         await helpers.cancelInvest(frank, cfManager)
         await helpers.invest(frank, cfManager, stablecoin, franksInvestment)
 
+        // Add additional blockchain transaction
+        await stablecoin.transfer(await jane.getAddress(), franksInvestmentWei)
+
         // Get transaction history
         await new Promise(f => setTimeout(f, 2000))
         const txHistory = await reportService
