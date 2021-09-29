@@ -49,6 +49,7 @@ services:
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.start-block-number=0"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.num-of-confirmations=0"
      - "com.ampnet.reportserviceeth.chain-mumbai.cf-manager-factory-addresses[0]="
+     - "com.ampnet.reportserviceeth.chain-mumbai.cf-manager-factory-addresses[1]="
      - "com.ampnet.reportserviceeth.chain-mumbai.snapshot-distributor-addresses[0]="
      - "com.ampnet.reportserviceeth.chain-matic.cf-manager-factory-addresses[0]="
      - "com.ampnet.reportserviceeth.chain-matic.snapshot-distributor-addresses[0]="
