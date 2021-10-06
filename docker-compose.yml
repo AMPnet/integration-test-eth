@@ -54,6 +54,10 @@ services:
      - "com.ampnet.reportserviceeth.chain-matic.cf-manager-factory-addresses[0]="
      - "com.ampnet.reportserviceeth.chain-matic.snapshot-distributor-addresses[0]="
      - "com.ampnet.reportserviceeth.chain-ethereum.cf-manager-factory-addresses[0]="
+     - "com.ampnet.reportserviceeth.chain-ethereum.cf-manager-factory-addresses[1]="
      - "com.ampnet.reportserviceeth.chain-ethereum.snapshot-distributor-addresses[0]="
+     - "com.ampnet.reportserviceeth.chain-goerli.cf-manager-factory-addresses[0]="
+     - "com.ampnet.reportserviceeth.chain-goerli.cf-manager-factory-addresses[1]="
+     - "com.ampnet.reportserviceeth.chain-goerli.snapshot-distributor-addresses[0]="
    ports:
      - "8137:8137"
