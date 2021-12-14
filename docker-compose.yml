@@ -15,7 +15,7 @@ services:
     environment:
       - "spring.profiles.active=dev"
       - "com.ampnet.identityservice.test.enabled-test-kyc=true"
-      - "com.ampnet.identityservice.chain-hardhat-testnet.private-key=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-private-key=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"
       - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-service-address=0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
       - "com.ampnet.identityservice.queue.polling=10"
       - "com.ampnet.identityservice.queue.initial-delay=1000"
