@@ -1,17 +1,27 @@
+// @ts-ignore
 import { ethers } from "hardhat";
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, BigNumber } from "ethers";
 import * as filters from "./filters";
 
-export async function deployStablecoin(deployer: Signer, supply: string, confirmations: number = 1): Promise<Contract> {
-  const supplyWei = ethers.utils.parseEther(supply);
+const config = {
+  confirmationsForDeploy: 1
+}
+
+export async function deployStablecoin(deployer: Signer, supply: number | string, precision: number | string, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
+  const supplyWei = ethers.utils.parseUnits(String(supply), String(precision));
   const USDC = await ethers.getContractFactory("USDC", deployer);
-  const stablecoin = await USDC.deploy(supplyWei);
+  const stablecoin = await USDC.deploy(supplyWei, precision);
   await ethers.provider.waitForTransaction(stablecoin.deployTransaction.hash, confirmations)
   console.log(`\nStablecoin deployed\n\tAt address: ${stablecoin.address}`);
   return stablecoin;
 }
 
-export async function deployApxRegistry(deployer: Signer, masterOwner: String, assetManager: String, priceManager: String, confirmations: number = 1): Promise<Contract> {
+export async function parseStablecoin(amount: number | string | Number, stablecoin: Contract): Promise<BigNumber> {
+  const decimals = await stablecoin.decimals();
+  return ethers.utils.parseUnits(String(amount), decimals);
+}
+
+export async function deployApxRegistry(deployer: Signer, masterOwner: string, assetManager: string, priceManager: string, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const ApxRegistry = await ethers.getContractFactory("ApxAssetsRegistry", deployer);
   const apxRegistry = await ApxRegistry.deploy(masterOwner, assetManager, priceManager);
   await ethers.provider.waitForTransaction(apxRegistry.deployTransaction.hash, confirmations)
@@ -19,9 +29,25 @@ export async function deployApxRegistry(deployer: Signer, masterOwner: String, a
   return apxRegistry;
 }
 
-export async function deployNameRegistry(deployer: Signer, masterOwner: String, factories: String[], confirmations: number = 1): Promise<Contract> {
+export async function deployFeeManager(deployer: Signer, owner: string, treasury: string, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
+  const FeeManager = await ethers.getContractFactory("FeeManager", deployer);
+  const feeManager = await FeeManager.deploy(owner, treasury);
+  await ethers.provider.waitForTransaction(feeManager.deployTransaction.hash, confirmations)
+  console.log(`\nFeeManager deployed\n\tAt address: ${feeManager.address}`);
+  return feeManager;
+}
+
+export async function deployMirroredToken(deployer: Signer, name: string, symbol: string, originalToken: string, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
+  const MirroredToken = await ethers.getContractFactory("MirroredToken", deployer);
+  const mirroredToken = await MirroredToken.deploy(name, symbol, originalToken);
+  await ethers.provider.waitForTransaction(mirroredToken.deployTransaction.hash, confirmations)
+  console.log(`\nMirroredToken deployed\n\tAt address: ${mirroredToken.address}`);
+  return mirroredToken;
+}
+
+export async function deployNameRegistry(deployer: Signer, masterOwner: string, factories: string[], confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const NameRegistry = await ethers.getContractFactory("NameRegistry", deployer);
-  const isWhitelisted: Boolean[] = factories.map(_ => true);
+  const isWhitelisted: boolean[] = factories.map(_ => true);
   const nameRegistry = await NameRegistry.deploy(masterOwner, factories, isWhitelisted);
   await ethers.provider.waitForTransaction(nameRegistry.deployTransaction.hash, confirmations)
   console.log(`\nNameRegistry deployed\n\tAt address: ${nameRegistry.address}`);
@@ -29,40 +55,42 @@ export async function deployNameRegistry(deployer: Signer, masterOwner: String, 
 }
 
 export async function deployFactories(deployer: Signer, confirmations: number = 1): Promise<Contract[]> {
+  const zeroAddr = ethers.constants.AddressZero;
   return [
-    await deployIssuerFactory(deployer, confirmations),
-    await deployAssetFactory(deployer, confirmations),
-    await deployAssetTransferableFactory(deployer, confirmations),
-    await deployCfManagerFactory(deployer, confirmations),
-    await deploySnapshotDistributorFactory(deployer, confirmations)
+    await deployIssuerFactory(deployer, zeroAddr, confirmations),
+    await deployAssetFactory(deployer, zeroAddr, confirmations),
+    await deployAssetTransferableFactory(deployer, zeroAddr, confirmations),
+    await deployAssetSimpleFactory(deployer, zeroAddr, confirmations),
+    await deployCfManagerFactory(deployer, zeroAddr, confirmations),
+    await deployCfManagerVestingFactory(deployer, zeroAddr, confirmations),
+    await deploySnapshotDistributorFactory(deployer, zeroAddr, confirmations)
   ];
 }
 
-export async function deployServices(deployer: Signer, masterWalletApprover: string, rewardPerApprove: string): Promise<Contract[]> {
+export async function deployServices(deployer: Signer, masterWalletApprover: string, rewardPerApprove: string, balanceThresholdForReward: string): Promise<Contract[]> {
   return [
-    await deployWalletApproverService(deployer, masterWalletApprover, rewardPerApprove),
+    await deployWalletApproverService(deployer, masterWalletApprover, [ ]),
     await deployDeployerService(deployer),
-    await deployQueryService(deployer)
+    await deployQueryService(deployer),
+    await deployInvestService(deployer),
+    await deployFaucetService(deployer, masterWalletApprover, [ ], rewardPerApprove, balanceThresholdForReward)
   ];
 }
 
 export async function deployWalletApproverService(
   deployer: Signer,
   masterWalletApprover: string,
-  rewardPerApproval: string,
-  confirmations: number = 1
+  walletApprovers: string[],
+  confirmations: number = config.confirmationsForDeploy
 ): Promise<Contract> {
   const WalletApproverService = await ethers.getContractFactory("WalletApproverService", deployer);
-  const rewardPerApprovalWei = ethers.utils.parseEther(rewardPerApproval);
-  const walletApproverService = await WalletApproverService.deploy(
-    masterWalletApprover, [ ], rewardPerApprovalWei
-  );
+  const walletApproverService = await WalletApproverService.deploy(masterWalletApprover, walletApprovers);
   await ethers.provider.waitForTransaction(walletApproverService.deployTransaction.hash, confirmations)
-  console.log(`\nWallet approver service deployed\n\tAt address: ${walletApproverService.address}\n\tReward per approval: ${rewardPerApproval} ETH`);
+  console.log(`\nWallet approver service deployed\n\tAt address: ${walletApproverService.address}`);
   return walletApproverService;
 }
 
-export async function deployDeployerService(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployDeployerService(deployer: Signer, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const DeployerService = await ethers.getContractFactory("DeployerService", deployer);
   const deployerService = await DeployerService.deploy();
   await ethers.provider.waitForTransaction(deployerService.deployTransaction.hash, confirmations)
@@ -70,68 +98,100 @@ export async function deployDeployerService(deployer: Signer, confirmations: num
   return deployerService;
 }
 
-export async function deployQueryService(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployQueryService(deployer: Signer, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const QueryService = await ethers.getContractFactory("QueryService", deployer);
   const queryService = await QueryService.deploy();
+  await ethers.provider.waitForTransaction(queryService.deployTransaction.hash, confirmations)
   console.log(`\nQuery service deployed\n\tAt address: ${queryService.address}`);
   return queryService;
 }
 
-export async function deployIssuerFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployInvestService(deployer: Signer, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
+  const InvestService = await ethers.getContractFactory("InvestService", deployer);
+  const investService = await InvestService.deploy();
+  await ethers.provider.waitForTransaction(investService.deployTransaction.hash, confirmations)
+  console.log(`\nInvest service deployed\n\tAt address: ${investService.address}`);
+  return investService;
+}
+
+export async function deployFaucetService(
+  deployer: Signer,
+  masterCaller: string,
+  allowedCallers: string[],
+  reward: string,
+  balanceThresholdForReward: string,
+  confirmations: number = config.confirmationsForDeploy
+): Promise<Contract> {
+  const FaucetService = await ethers.getContractFactory("FaucetService", deployer);
+  const rewardWei = ethers.utils.parseEther(reward);
+  const thresholdWei = ethers.utils.parseEther(balanceThresholdForReward);
+  const faucetService = await FaucetService.deploy(
+      masterCaller, allowedCallers, rewardWei, thresholdWei
+  );
+  await ethers.provider.waitForTransaction(faucetService.deployTransaction.hash, confirmations)
+  console.log(`\nFaucet service deployed\n\tAt address: ${faucetService.address}\n\tReward per approval: ${reward} ETH\n\tBalance threshold for reward: ${balanceThresholdForReward} ETH`);
+  return faucetService;
+}
+
+export async function deployIssuerFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const IssuerFactory = await ethers.getContractFactory("IssuerFactory", deployer);
-  const issuerFactory = await IssuerFactory.deploy();
+  const issuerFactory = await IssuerFactory.deploy(oldFactory);
   await ethers.provider.waitForTransaction(issuerFactory.deployTransaction.hash, confirmations)
   console.log(`\nIssuerFactory deployed\n\tAt address: ${issuerFactory.address}`);
   return issuerFactory;
 }
 
-export async function deployAssetFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployAssetFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const AssetDeployer = await ethers.getContractFactory("AssetDeployer", deployer);
   const assetDeployer = await AssetDeployer.deploy();
+  await ethers.provider.waitForTransaction(assetDeployer.deployTransaction.hash, confirmations)
+  console.log(`\nAssetDeployer deployed\n\tAt address: ${assetDeployer.address}`);
   const AssetFactory = await ethers.getContractFactory("AssetFactory", deployer);
-  const assetFactory = await AssetFactory.deploy(assetDeployer.address);
+  const assetFactory = await AssetFactory.deploy(assetDeployer.address, oldFactory);
   await ethers.provider.waitForTransaction(assetFactory.deployTransaction.hash, confirmations)
   console.log(`\nAssetFactory deployed\n\tAt address: ${assetFactory.address}`);
   return assetFactory;
 }
 
-export async function deployAssetSimpleFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployAssetSimpleFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const AssetFactory = await ethers.getContractFactory("AssetSimpleFactory", deployer);
-  const assetFactory = await AssetFactory.deploy();
+  const assetFactory = await AssetFactory.deploy(oldFactory);
   await ethers.provider.waitForTransaction(assetFactory.deployTransaction.hash, confirmations)
   console.log(`\nAssetSimpleFactory deployed\n\tAt address: ${assetFactory.address}`);
   return assetFactory;
 }
 
-export async function deployAssetTransferableFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployAssetTransferableFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const AssetTransferableDeployer = await ethers.getContractFactory("AssetTransferableDeployer", deployer);
   const assetTransferableDeployer = await AssetTransferableDeployer.deploy();
+  await ethers.provider.waitForTransaction(assetTransferableDeployer.deployTransaction.hash, confirmations)
+  console.log(`\nAssetTransferableDeployer deployed\n\tAt address: ${assetTransferableDeployer.address}`);
   const AssetTransferableFactory = await ethers.getContractFactory("AssetTransferableFactory", deployer);
-  const assetTransferableFactory = await AssetTransferableFactory.deploy(assetTransferableDeployer.address);
+  const assetTransferableFactory = await AssetTransferableFactory.deploy(assetTransferableDeployer.address, oldFactory);
   await ethers.provider.waitForTransaction(assetTransferableFactory.deployTransaction.hash, confirmations)
   console.log(`\nAssetTransferableFactory deployed\n\tAt address: ${assetTransferableFactory.address}`);
   return assetTransferableFactory;
 }
 
-export async function deployCfManagerFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployCfManagerFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const CfManagerFactory = await ethers.getContractFactory("CfManagerSoftcapFactory", deployer);
-  const cfManagerFactory = await CfManagerFactory.deploy();
+  const cfManagerFactory = await CfManagerFactory.deploy(oldFactory);
   await ethers.provider.waitForTransaction(cfManagerFactory.deployTransaction.hash, confirmations)
   console.log(`\nCfManagerFactory deployed\n\tAt address: ${cfManagerFactory.address}`);
   return cfManagerFactory;
 }
 
-export async function deployCfManagerVestingFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deployCfManagerVestingFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const CfManagerVestingFactory = await ethers.getContractFactory("CfManagerSoftcapVestingFactory", deployer);
-  const cfManagerFactory = await CfManagerVestingFactory.deploy();
+  const cfManagerFactory = await CfManagerVestingFactory.deploy(oldFactory);
   await ethers.provider.waitForTransaction(cfManagerFactory.deployTransaction.hash, confirmations)
   console.log(`\nCfManagerVestingFactory deployed\n\tAt address: ${cfManagerFactory.address}`);
   return cfManagerFactory;
 }
 
-export async function deploySnapshotDistributorFactory(deployer: Signer, confirmations: number = 1): Promise<Contract> {
+export async function deploySnapshotDistributorFactory(deployer: Signer, oldFactory: string = ethers.constants.AddressZero, confirmations: number = config.confirmationsForDeploy): Promise<Contract> {
   const SnapshotDistributorFactory = await ethers.getContractFactory("SnapshotDistributorFactory", deployer);
-  const snapshotDistributorFactory = await SnapshotDistributorFactory.deploy();
+  const snapshotDistributorFactory = await SnapshotDistributorFactory.deploy(oldFactory);
   await ethers.provider.waitForTransaction(snapshotDistributorFactory.deployTransaction.hash, confirmations)
   console.log(`\nSnapshotDistributorFactory deployed\n\tAt address: ${snapshotDistributorFactory.address}`);
   return snapshotDistributorFactory;
@@ -143,11 +203,11 @@ export async function deploySnapshotDistributorFactory(deployer: Signer, confirm
  * One investment platform instance (one domain) is mapped to one Issuer instance.
  * This is where the whitelisted addresses are stored. Issuer also holds the address of the
  * stablecoin to be accepted for the investments and revenue share payouts.
- * 
+ *
  * @param from Creator's signer object
  * @param stablecoin Stablecoin contract instance accepted as the payment method for this issuer
  * @param walletApproverAddress Address of the wallet approver (wallet with the rights to whitelist addresses).
- *                              This will be set to our auto-approver-script's wallet if the manager 
+ *                              This will be set to our auto-approver-script's wallet if the manager
  *                              chooses to auto-approve all the wallets with completed kyc.
  * @param info Ipfs hash representing general investment platform instance info (colors, logo url, etc)
  * @param issuerFactory Issuer factory contract (predeployed and sitting at well known address)
@@ -171,11 +231,14 @@ export async function createIssuer(
     nameRegistry.address
   );
   const receipt = await ethers.provider.waitForTransaction(issuerTx.hash);
+  // console.log("issuer deployed, scanning for events", receipt)
   for (const log of receipt.logs) {
     try {
       const parsedLog = issuerFactory.interface.parseLog(log);
+      // console.log("parsedLog", parsedLog);
       if (parsedLog.name == "IssuerCreated") {
         const ownerAddress = parsedLog.args.creator;
+        // console.log("parsed creator", ownerAddress);
         const issuerAddress = parsedLog.args.issuer;
         console.log(`\nIssuer deployed\n\tAt address: ${issuerAddress}\n\tOwner: ${ownerAddress}`);
         return (await ethers.getContractAt("Issuer", issuerAddress));
@@ -186,16 +249,16 @@ export async function createIssuer(
 }
 
 /**
- * Creates an Asset which is basically an ERC-20 token with the possibility 
+ * Creates an Asset which is basically an ERC-20 token with the possibility
  * of taking snapshots to support revenue distribution functionality.
  * An asset has to be created before the crowdfunding campaign with the predefined token supply.
  * The whole supply is automatically owned by the token creator.
- * 
+ *
  * @param from Creator's signer object
  * @param issuer Asset's issuer contract instance
  * @param initialTokenSupply Total number of tokens to be created. Not changeable afterwards.
- * @param whitelistRequiredForTransfer If set to true, tokens will be transferable only between the whitelisted addresses 
- * @param name Asset token name (For example APPLE INC.) 
+ * @param whitelistRequiredForTransfer If set to true, tokens will be transferable only between the whitelisted addresses
+ * @param name Asset token name (For example APPLE INC.)
  * @param symbol Asset token symbol/ticker (For example APPL)
  * @param info Asset info ipfs hash providing more than just a name and the ticker (if necessary)
  * @param assetFactory Asset factory contract (predeployed and sitting at well known address)
@@ -206,6 +269,7 @@ export async function createAsset(
   issuer: Contract,
   mappedName: String,
   initialTokenSupply: Number,
+  transferable: boolean,
   whitelistRequiredForRevenueClaim: boolean,
   whitelistRequiredForLiquidationClaim: boolean,
   name: String,
@@ -215,18 +279,20 @@ export async function createAsset(
   nameRegistry: Contract,
   apxRegistry: Contract
 ): Promise<Contract> {
-  const createAssetTx = await assetFactory.create(
-    owner,
-    issuer.address,
-    apxRegistry.address,
-    nameRegistry.address,
-    mappedName,
-    ethers.utils.parseEther(initialTokenSupply.toString()),
-    whitelistRequiredForRevenueClaim,
-    whitelistRequiredForLiquidationClaim,
-    name,
-    symbol,
-    info
+  const createAssetTx = await assetFactory.create([
+      owner,
+      issuer.address,
+      apxRegistry.address,
+      nameRegistry.address,
+      mappedName,
+      ethers.utils.parseEther(initialTokenSupply.toString()),
+      transferable,
+      whitelistRequiredForRevenueClaim,
+      whitelistRequiredForLiquidationClaim,
+      name,
+      symbol,
+      info
+    ]
   );
   const receipt = await ethers.provider.waitForTransaction(createAssetTx.hash);
   for (const log of receipt.logs) {
@@ -248,10 +314,10 @@ export async function createAsset(
  * For the crowdfunding campaign to be considered active, the creator has to transfer tokens
  * to be sold to the address of this contract, and then call the approveCampaign() function on the
  * Issuer contract.
- * 
+ *
  * @param from Creator's signer object
  * @param asset Asset contract instance whose tokens are to be sold through this crowdfunding campaign
- * @param initialPricePerToken Price per token (in stablecoin) 
+ * @param initialPricePerToken Price per token (in stablecoin)
  * @param softCap Minimum funds to be raised (in stablecoin) for the campaigng to succeed
  * @param whitelistRequired Set to true to allow only whitelisted (kyc) wallets to invest.
  * @param info Campaign info ipfs hash describing this campaign.
@@ -271,14 +337,19 @@ export async function createCfManager(
   cfManagerFactory: Contract,
   nameRegistry: Contract
 ): Promise<Contract> {
+  const issuer = await ethers.getContractAt("Issuer", 
+    (await asset.commonState()).issuer
+  );
+  const stablecoinAddress = (await issuer.commonState()).stablecoin;
+  const stablecoin = await ethers.getContractAt("USDC", stablecoinAddress);
   const cfManagerTx = await cfManagerFactory.create(
     owner,
     mappedName,
     asset.address,
     pricePerToken,
-    ethers.utils.parseEther(softCap.toString()),
-    ethers.utils.parseEther(minInvestment.toString()),
-    ethers.utils.parseEther(maxInvestment.toString()),
+    await parseStablecoin(softCap, stablecoin),
+    await parseStablecoin(minInvestment, stablecoin),
+    await parseStablecoin(maxInvestment, stablecoin),
     whitelistRequired,
     info,
     nameRegistry.address
@@ -336,20 +407,41 @@ export async function createSnapshotDistributor(
 /**
  * Invests some amount of the stablecoin.
  * The stablecoin to be used was fetched earlier by reading the asset's issuer configuration.
- * 
+ *
  * Two transactions involved here:
  *  1) Approve CfManager to spend your funds
  *  2) Call the invest() function on the CfManager
- * 
+ *
  * @param investor Investor signer object
  * @param cfManager CfManager contract instance
  * @param stablecoin Stablecoin contract instance to be used for payment
  * @param amount Amount of the stablecoin to be invested
  */
 export async function invest(investor: Signer, cfManager: Contract, stablecoin: Contract, amount: Number) {
-  const amountWei = ethers.utils.parseEther(amount.toString());
+  const amountWei = await parseStablecoin(amount, stablecoin);
   await stablecoin.connect(investor).approve(cfManager.address, amountWei);
   await cfManager.connect(investor).invest(amountWei);
+}
+
+/**
+ * Invests some amount of the stablecoin.
+ * The stablecoin to be used was fetched earlier by reading the asset's issuer configuration.
+ *
+ * Two transactions involved here:
+ *  1) Approve CfManager to spend your funds
+ *  2) Call the invest() function on the CfManager
+ *
+ * @param investor Investor signer object
+ * @param cfManager CfManager contract instance
+ * @param stablecoin Stablecoin contract instance to be used for payment
+ * @param amount Amount of the stablecoin to be invested
+ */
+ export async function investForBeneficiary(spender: Signer, beneficiary: Signer, cfManager: Contract, stablecoin: Contract, amount: Number, caller: Signer = ethers.provider.getSigner()) {
+  const amountWei = await parseStablecoin(amount, stablecoin);
+  const beneficiaryAddress = await beneficiary.getAddress();
+  const spenderAddress = await spender.getAddress();
+  await stablecoin.connect(spender).approve(cfManager.address, amountWei);
+  await cfManager.connect(caller).investForBeneficiary(spenderAddress, beneficiaryAddress, amountWei);
 }
 
 /**
@@ -357,7 +449,7 @@ export async function invest(investor: Signer, cfManager: Contract, stablecoin: 
  * all of the invested funds to the investor's wallet. Can only be called by the
  * investor who has placed an investment in the campaign, and the campaign was not yet
  * finalized.
- * 
+ *
  * @param investor Investor signer object
  * @param cfManager CfManager contract instance
  */
@@ -369,7 +461,7 @@ export async function cancelInvest(investor: Signer, cfManager: Contract) {
  * Transfers claimable tokens to the investors wallet.
  * Can only be called if the investor has actually invested in the campaign
  * and only after the campaign owner has finalized the campaign.
- * 
+ *
  * @param investor Investor signer object
  * @param cfManager CfManager contract instance
  */
@@ -383,8 +475,8 @@ export async function claimInvestment(investor: Signer, cfManager: Contract) {
  * Can only be called by the campaign owner if the soft cap has been reached.
  * This transaction will transfer all of the funds raised to the owner's wallet.
  * If some of the tokens were not sold they are also returned to the owner's wallet
- * in the same transaction. 
- * 
+ * in the same transaction.
+ *
  * @param owner CfManager owner signer object
  * @param cfManager CfManager contract instance
  */
@@ -395,7 +487,7 @@ export async function finalizeCampaign(owner: Signer, cfManager: Contract) {
 /**
  * Cancels active crowdfunding campaign.
  * Can only be cancelled by the campaign owner, if it was not finalized before.
- * 
+ *
  * @param owner CfManager contract owner signer object
  * @param cfManager CfManager contract instance
  */
@@ -404,11 +496,11 @@ export async function cancelCampaign(owner: Signer, cfManager: Contract) {
 }
 
 /**
- * Distributes revenue to the token holders, proportional to the amount of the tokens 
+ * Distributes revenue to the token holders, proportional to the amount of the tokens
  * owned at the moment of the execution of this transaction. If the token ownership structure changes
  * after this transaction has been processed, it will not impact the distribution because the ownership
  * structure snapshot has been made when the revenue was distributed.
- * 
+ *
  * Revenue distribution goes through the SnapshotDistributor contract, created by the SnapshotDistributorFactory.
  * One snapshot distributor can be used for multiple payouts (say yearly shareholder dividend payout).
  * 
@@ -417,19 +509,20 @@ export async function cancelCampaign(owner: Signer, cfManager: Contract) {
  *  2) call the createPayout() function on the SnapshotDistributor contract
  * 
  * createPayout() function will take the snapshot of the token holders structure and distribute revenue accordingly.
- * createPayout() function also takes the payment description as parameter, if there is any info to be provided for 
+ * createPayout() function also takes the payment description as parameter, if there is any info to be provided for
  *                the payment batch (for example "WindFarm Q3/2021 revenue")
- * 
+ *
  * @param owner Payment creator signer object
  * @param snapshotDistributor SnapshotDistributor contract instance used for handling the payouts. Has to be created before calling this function.
  * @param stablecoin Stablecoin contract instance to be used as the payment method
  * @param amount Amount (in stablecoin) to be distributed as revenue
  * @param payoutDescription Description for this revenue payout
+ * @param payoutDescription Addresses to ignore when distributing revenue (for example: liquidity pools, treasury, token owner...)
  */
-export async function createPayout(owner: Signer, snapshotDistributor: Contract, stablecoin: Contract, amount: Number, payoutDescription: String) {
-  const amountWei = ethers.utils.parseEther(amount.toString());
+export async function createPayout(owner: Signer, snapshotDistributor: Contract, stablecoin: Contract, amount: Number, payoutDescription: String, ignoredAddresses: String[] = []) {
+  const amountWei = await parseStablecoin(amount, stablecoin);
   await stablecoin.connect(owner).approve(snapshotDistributor.address, amountWei);
-  await snapshotDistributor.connect(owner).createPayout(payoutDescription, stablecoin.address, amountWei, []);
+  await snapshotDistributor.connect(owner).createPayout(payoutDescription, stablecoin.address, amountWei, ignoredAddresses);
 }
 
 /**
@@ -450,16 +543,12 @@ export async function claimRevenue(investor: Signer, snapshotDistributor: Contra
 /**
  * Will update info hash on the target object.
  * Can only be called by the contract owner.
- * 
+ *
  * @param owner Contract owner signer object
  * @param contract Must be one of: Issuer, CfManager, Asset, AssetTransferable, SnapshotDistributor
  */
 export async function setInfo(owner: Signer, contract: Contract, infoHash: String) {
   await contract.connect(owner).setInfo(infoHash);
-}
-
-export async function setChildChainManager(owner: Signer, contract: Contract, manager: String) {
-  await contract.connect(owner).setChildChainManager(manager);
 }
 
 /**
@@ -477,12 +566,23 @@ export async function updatePrice(priceManager: Signer, apxRegistry: Contract, a
 }
 
 /**
+ * FeeManager related functions.
+ */
+export async function setDefaultFee(feeManager: Contract, numerator: Number, denominator: Number) {
+  await feeManager.setDefaultFee(true, numerator, denominator);
+}
+
+export async function setFeeForCampaign(feeManager: Contract, campaign: String, numerator: Number, denominator: Number) {
+  await feeManager.setCampaignFee(campaign, true, numerator, denominator);
+}
+
+/**
  * Liquidation functions.
  */
 export async function liquidate(liquidator: Signer, asset: Contract, stablecoin: Contract, liquidationFunds: Number) {
   const liquidatorAddress = await liquidator.getAddress();
   const liquidatorOwnedAssetTokens = await asset.balanceOf(liquidatorAddress);
-  const liquidationFundsWei = ethers.utils.parseEther(liquidationFunds.toString());
+  const liquidationFundsWei = await parseStablecoin(liquidationFunds, stablecoin);
   await asset.connect(liquidator).approve(asset.address, liquidatorOwnedAssetTokens);
   await stablecoin.connect(liquidator).approve(asset.address, liquidationFundsWei);
   await asset.connect(liquidator).liquidate();
@@ -506,12 +606,12 @@ export async function getInfoHistory(contract: Contract): Promise<object> {
 }
 
 /**
- * 
+ *
  * @param contract Issuer contract instance
  * @returns State object
- * 
+ *
  * Example response array (ethersjs):
- * 
+ *
  *   [
  *    id: BigNumber { _hex: '0x00', _isBigNumber: true },
  *    owner: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
@@ -525,12 +625,12 @@ export async function getIssuerState(contract: Contract): Promise<String> {
 }
 
 /**
- * 
+ *
  * @param contract Asset contract instance
  * @returns State object
- * 
+ *
  * Example response array (ethersjs):
- * 
+ *
  *  [
  *   id: BigNumber { _hex: '0x00', _isBigNumber: true },
  *   owner: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
@@ -542,26 +642,19 @@ export async function getIssuerState(contract: Contract): Promise<String> {
  *   name: 'Test Asset',
  *   symbol: 'TSTA'
  *  ]
- * 
+ *
  */
 export async function getAssetState(contract: Contract): Promise<object> {
   return contract.getState();
 }
-export async function getAssetChildChainManager(contract: Contract): Promise<string> {
-  const state = await contract.getState();
-  return state.childChainManager;
-}
-export async function getMirroredAssetChildChainManager(contract: Contract): Promise<string> {
-  return contract.childChainManager();
-}
 
 /**
- * 
+ *
  * @param contract CfManager contract instance
  * @returns State object
- * 
+ *
  * Example response array (ethersjs):
- * 
+ *
  *   [
  *    id: BigNumber { _hex: '0x00', _isBigNumber: true },
  *    owner: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
@@ -583,12 +676,11 @@ export async function getCrowdfundingCampaignState(contract: Contract): Promise<
 }
 
 /**
- * 
  * @param contract SnapshotDistributor contract instance
  * @returns State object
- * 
+ *
  * Example response array (ethersjs):
- * 
+ *
  *   [
  *    id: BigNumber { _hex: '0x00', _isBigNumber: true },
  *    owner: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
@@ -617,10 +709,10 @@ export async function fetchIssuerInstances(issuerFactory: Contract): Promise<obj
  * @param assetFactory Predeployed Asset factory instance
  * @returns Array of asset states
  */
-export async function fetchAssetInstances(assetFactory: Contract): Promise<object> {
+export async function fetchAssetInstances(assetFactory: Contract, assetType: string): Promise<object> {
   const instances = await assetFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
-    const instance = await ethers.getContractAt("Asset", instanceAddress);
+    const instance = await ethers.getContractAt(assetType, instanceAddress);
     return instance.getState();
   }));
   return mappedInstances;
@@ -631,10 +723,10 @@ export async function fetchAssetInstances(assetFactory: Contract): Promise<objec
  * @param issuer Filter assets by this issuer
  * @returns Array of asset states
  */
-export async function fetchAssetInstancesForIssuer(assetFactory: Contract, issuer: Contract): Promise<object> {
+export async function fetchAssetInstancesForIssuer(assetFactory: Contract, assetType: string, issuer: Contract): Promise<object> {
   const instances = await assetFactory.getInstancesForIssuer(issuer.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
-    const instance = await ethers.getContractAt("Asset", instanceAddress);
+    const instance = await ethers.getContractAt(assetType, instanceAddress);
     return instance.getState();
   }));
   return mappedInstances;
@@ -644,10 +736,10 @@ export async function fetchAssetInstancesForIssuer(assetFactory: Contract, issue
  * @param cfManagerFactory Predeployed CfManager factory instance
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstances(cfManagerFactory: Contract): Promise<object> {
+export async function fetchCrowdfundingInstances(cfManagerFactory: Contract, campaignType: string): Promise<object> {
   const instances = await cfManagerFactory.getInstances();
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
-    const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
+    const instance = await ethers.getContractAt(campaignType, instanceAddress);
     return instance.getState();
   }));
   return mappedInstances;
@@ -658,10 +750,10 @@ export async function fetchCrowdfundingInstances(cfManagerFactory: Contract): Pr
  * @param issuer Filter campaigns by this issuer
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Contract, issuer: Contract): Promise<object> {
+export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Contract, campaignType: string, issuer: Contract): Promise<object> {
   const instances = await cfManagerFactory.getInstancesForIssuer(issuer.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
-    const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
+    const instance = await ethers.getContractAt(campaignType, instanceAddress);
     return instance.getState();
   }));
   return mappedInstances;
@@ -672,10 +764,10 @@ export async function fetchCrowdfundingInstancesForIssuer(cfManagerFactory: Cont
  * @param asset Filter campaigns by this asset
  * @returns Array of crowdfunding campaign states
  */
-export async function fetchCrowdfundingInstancesForAsset(cfManagerFactory: Contract, asset: Contract): Promise<object> {
+export async function fetchCrowdfundingInstancesForAsset(cfManagerFactory: Contract, campaignType: string, asset: Contract): Promise<object> {
   const instances = await cfManagerFactory.getInstancesForAsset(asset.address);
   const mappedInstances = await Promise.all(instances.map(async (instanceAddress: string) => {
-    const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
+    const instance = await ethers.getContractAt(campaignType, instanceAddress);
     return instance.getState();
   }));
   return mappedInstances;
@@ -738,9 +830,9 @@ export async function fetchIssuerStateById(issuerFactory: Contract, id: Number):
  * @param id Crowdfunding campaign id
  * @returns Crowdfunding campaign state
  */
-export async function fetchCampaignStateById(cfManagerFactory: Contract, id: Number): Promise<object> {
+export async function fetchCampaignStateById(cfManagerFactory: Contract, campaignType: string, id: Number): Promise<object> {
   const instanceAddress = await cfManagerFactory.instances(id);
-  const instance = await ethers.getContractAt("CfManagerSoftcap", instanceAddress);
+  const instance = await ethers.getContractAt(campaignType, instanceAddress);
   return instance.getState();
 }
 
@@ -749,22 +841,16 @@ export async function fetchCampaignStateById(cfManagerFactory: Contract, id: Num
  * @param id Asset id
  * @returns Asset state
  */
-export async function fetchAssetStateById(assetFactory: Contract, id: Number): Promise<object> {
+export async function fetchAssetStateById(assetFactory: Contract, assetType: string, id: Number): Promise<object> {
   const instanceAddress = await assetFactory.instances(id);
-  const instance = await ethers.getContractAt("Asset", instanceAddress);
-  return instance.getState();
-}
-
-export async function fetchAssetTransferableStateById(assetFactory: Contract, id: Number): Promise<object> {
-  const instanceAddress = await assetFactory.instances(id);
-  const instance = await ethers.getContractAt("AssetTransferable", instanceAddress);
+  const instance = await ethers.getContractAt(assetType, instanceAddress);
   return instance.getState();
 }
 
 /**
  * @param snapshotDistributor Predeployed SnapshotDistributor factory
  * @param id SnapshotDistributor id
- * @returns SnapshotDistributor state 
+ * @returns SnapshotDistributor state
  */
 export async function fetchSnapshotDistributorStateById(snapshotDistributorFactory: Contract, id: Number): Promise<object> {
   const instanceAddress = await snapshotDistributorFactory.instances(id);
@@ -774,13 +860,13 @@ export async function fetchSnapshotDistributorStateById(snapshotDistributorFacto
 
 /**
  * Fetches transaction history for given user wallet and issuer instance.
- * To calculate this, one must fetch all the instances of the following contracts for given issuer: 
+ * To calculate this, one must fetch all the instances of the following contracts for given issuer:
  * -> Asset (for asset token transfers, if any)
  * -> CfManagerSoftcap (for investment, cancel investment and claim tokens transactions)
  * -> SnapshotDistributor (for revenue share claim transactions)
  * Then after all the contract instances have been fetched, we scan for specific events and filter
  * by the user's wallet.
- * 
+ *
  * @param wallet User wallet address
  * @param issuer Issuer contract instance
  * @param cfManagerFactory Predeployed CfManager contract factory
@@ -791,10 +877,12 @@ export async function fetchTxHistory(
   wallet: string,
   issuer: Contract,
   cfManagerFactory: Contract,
+  campaignType: string,
   assetFactory: Contract,
+  assetType: string,
   snapshotDistributorFactory: Contract
 ) {
-  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);;
+  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);
   const crowdfundingTransactions = await filters.getCrowdfundingCampaignTransactions(wallet, issuer, cfManagerFactory);
   const snapshotDistributorTransactions = await filters.getSnapshotDistributorTransactions(wallet, issuer, snapshotDistributorFactory);
   const transactions = assetTransactions.concat(crowdfundingTransactions).concat(snapshotDistributorTransactions);
@@ -804,9 +892,9 @@ export async function fetchTxHistory(
 /**
  * @param issuer Issuer contract instance
  * @returns Array of issuer wallet records
- * 
+ *
  * Example response array (ethers.js)
- * 
+ *
  *   [
  *     [
  *       wallet: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
