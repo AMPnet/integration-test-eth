@@ -882,8 +882,8 @@ export async function fetchTxHistory(
   assetType: string,
   snapshotDistributorFactory: Contract
 ) {
-  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory);
-  const crowdfundingTransactions = await filters.getCrowdfundingCampaignTransactions(wallet, issuer, cfManagerFactory);
+  const assetTransactions = await filters.getAssetTransactions(wallet, issuer, assetFactory, assetType);
+  const crowdfundingTransactions = await filters.getCrowdfundingCampaignTransactions(wallet, issuer, cfManagerFactory, campaignType);
   const snapshotDistributorTransactions = await filters.getSnapshotDistributorTransactions(wallet, issuer, snapshotDistributorFactory);
   const transactions = assetTransactions.concat(crowdfundingTransactions).concat(snapshotDistributorTransactions);
   return transactions.sort((a, b) => (a.timestamp < b.timestamp) ? -1 : 1);

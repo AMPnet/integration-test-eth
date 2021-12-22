@@ -10,6 +10,7 @@ import * as userService from "../util/user-service";
 import * as reportService from "../util/report-service";
 import * as deployerServiceUtil from "../util/deployer-service";
 import * as db from "../util/db"
+import {DockerEnv} from "../util/types";
 
 describe("Full flow test", function () {
 
@@ -17,17 +18,22 @@ describe("Full flow test", function () {
     let issuerFactory: Contract;
     let assetFactory: Contract;
     let assetTransferableFactory: Contract;
+    let assetSimpleFactory: Contract;
     let cfManagerFactory: Contract;
+    let cfManagerVestingFactory: Contract;
     let payoutManagerFactory: Contract;
 
     //////// SERVICES ////////
     let walletApproverService: Contract;
     let deployerService: Contract;
     let queryService: Contract;
+    let investService: Contract;
+    let faucetService: Contract;
 
     ////////// APX //////////
     let apxRegistry: Contract;
     let nameRegistry: Contract;
+    let feeManager: Contract;
 
     //////// SIGNERS ////////
     let deployer: Signer;
@@ -38,6 +44,8 @@ describe("Full flow test", function () {
     let alice: Signer;
     let jane: Signer;
     let frank: Signer;
+    let mark: Signer;
+    let treasury: Signer;
 
     //////// CONTRACTS ////////
     let stablecoin: Contract;
@@ -46,7 +54,7 @@ describe("Full flow test", function () {
     let cfManager: Contract;
 
     beforeEach(async function () {
-        await docker.up();
+        await docker.hardhat.up();
 
         const accounts: Signer[] = await ethers.getSigners();
         deployer        = accounts[0];
@@ -57,15 +65,19 @@ describe("Full flow test", function () {
         alice           = accounts[5];
         jane            = accounts[6];
         frank           = accounts[7];
+        mark            = accounts[8];
+        treasury        = accounts[9];
 
-        stablecoin = await helpers.deployStablecoin(deployer, "1000000000000");
+        stablecoin = await helpers.deployStablecoin(deployer, "1000000000000", "6");
 
         const factories = await helpers.deployFactories(deployer);
         issuerFactory = factories[0];
         assetFactory = factories[1];
         assetTransferableFactory = factories[2];
-        cfManagerFactory = factories[3];
-        payoutManagerFactory = factories[4];
+        assetSimpleFactory = factories[3];
+        cfManagerFactory = factories[4];
+        cfManagerVestingFactory = factories[5];
+        payoutManagerFactory = factories[6];
 
         apxRegistry = await helpers.deployApxRegistry(
             deployer,
@@ -78,16 +90,32 @@ describe("Full flow test", function () {
             await deployer.getAddress(),
             factories.map(factory => factory.address)
         );
+        feeManager = await helpers.deployFeeManager(
+          deployer,
+          await deployer.getAddress(),
+          await treasury.getAddress()
+        );
 
         const walletApproverAddress = await walletApprover.getAddress();
         const services = await helpers.deployServices(
             deployer,
             walletApproverAddress,
-            "0.001"
+            "0.001",
+            "0"
         );
         walletApproverService = services[0];
         deployerService = services[1];
         queryService = services[2];
+        investService = services[3];
+        faucetService = services[4];
+
+        const dockerEnv: DockerEnv = {
+            WALLET_APPROVER_PRIVATE_KEY: "", // TODO
+            WALLET_APPROVER_ADDRESS: walletApproverService.address,
+            CF_MANAGER_FACTORY_ADDRESS_0: cfManagerFactory.address,
+            SNAPSHOT_DISTRIBUTOR_ADDRESS_0: payoutManagerFactory.address,
+        };
+        await docker.backend.up(dockerEnv);
     });
 
     it("Should whitelist user and get tx history", async function () {
@@ -143,7 +171,7 @@ describe("Full flow test", function () {
             campaignInfoHash,
             apxRegistry.address,
             nameRegistry.address,
-            childChainManager,
+            feeManager.address,
             assetTransferableFactory,
             cfManagerFactory,
             deployerService
@@ -171,7 +199,7 @@ describe("Full flow test", function () {
 
         //// Frank buys $100k USDC and goes through kyc process (wallet approved)
         const franksInvestment = 100000
-        const franksInvestmentWei = ethers.utils.parseEther(franksInvestment.toString())
+        const franksInvestmentWei = ethers.utils.parseUnits(franksInvestment.toString(), "6")
         await stablecoin.transfer(franksAddress, franksInvestmentWei)
 
         //// Frank invests $100k USDC in the project and then cancels her/his investment and then invests again
@@ -189,8 +217,11 @@ describe("Full flow test", function () {
         expect(await txHistory?.data.transactions.length).is.equal(3)
     })
 
+    // TODO test faucet and auto-invest
+
     after(async function () {
         await db.clearDb()
-        await docker.down()
+        await docker.backend.down()
+        await docker.hardhat.down()
     })
 })
