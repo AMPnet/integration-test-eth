@@ -67,13 +67,13 @@ export async function deployFactories(deployer: Signer, confirmations: number = 
   ];
 }
 
-export async function deployServices(deployer: Signer, masterWalletApprover: string, rewardPerApprove: string, balanceThresholdForReward: string): Promise<Contract[]> {
+export async function deployServices(deployer: Signer, masterWalletApprover: string, allowedFaucetCallers: string[], rewardPerApprove: string, balanceThresholdForReward: string): Promise<Contract[]> {
   return [
     await deployWalletApproverService(deployer, masterWalletApprover, [ ]),
     await deployDeployerService(deployer),
     await deployQueryService(deployer),
     await deployInvestService(deployer),
-    await deployFaucetService(deployer, masterWalletApprover, [ ], rewardPerApprove, balanceThresholdForReward)
+    await deployFaucetService(deployer, masterWalletApprover, allowedFaucetCallers, rewardPerApprove, balanceThresholdForReward)
   ];
 }
 

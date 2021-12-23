@@ -3,9 +3,10 @@ export enum AssetState {
     TOKENIZED = 1
 }
 
-export interface DockerEnv { // TODO add more variables
-    WALLET_APPROVER_PRIVATE_KEY: string
+export interface DockerEnv {
     WALLET_APPROVER_ADDRESS: string
+    FAUCET_SERVICE_ADDRESS: string
+    AUTO_INVEST_SERVICE_ADDRESS: string
     CF_MANAGER_FACTORY_ADDRESS_0: string
     SNAPSHOT_DISTRIBUTOR_ADDRESS_0: string
 }
