@@ -11,15 +11,62 @@ const maxNumberOfChecks = 30       // maximum of 30 checks after giving up which
 
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
-async function up() {
+async function upHardhat() {
     await compose.upAll({
         cwd: dockerComposeLocation,
         log: true,
+        composeOptions: ["-f", "docker-compose-hardhat.yml"],
         commandOptions: ["--build"]
     }).catch(err => {
-        console.log("docker-compose up error: ", err)
+        console.log("docker-compose up error (hardhat): ", err)
     })
-    await healthcheck()
+    const hardHatServiceChecker = new HTTPChecker('Hard Hat Service checker', 'http://localhost:8545/')
+    await healthcheck([hardHatServiceChecker])
+}
+
+async function downHardhat() {
+    await compose.down({
+        cwd: dockerComposeLocation,
+        composeOptions: ["-f", "docker-compose-hardhat.yml"],
+        log: true
+    }).catch(err => {
+        console.log("docker-compose down error (hardhat): ", err)
+    })
+}
+
+const hardhat = {
+    up: upHardhat,
+    down: downHardhat
+}
+
+async function upBackend(dockerEnv) {
+    await compose.upAll({
+        cwd: dockerComposeLocation,
+        log: true,
+        composeOptions: ["-f", "docker-compose-backend.yml"],
+        commandOptions: ["--build"],
+        env: {...process.env, ...dockerEnv}
+    }).catch(err => {
+        console.log("docker-compose up error (backend): ", err)
+    })
+    const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
+    const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
+    await healthcheck([identityServiceChecker, reportServiceChecker])
+}
+
+async function downBackend() {
+    await compose.down({
+        cwd: dockerComposeLocation,
+        composeOptions: ["-f", "docker-compose-backend.yml"],
+        log: true
+    }).catch(err => {
+        console.log("docker-compose down error (backend): ", err)
+    })
+}
+
+const backend = {
+    up: upBackend,
+    down: downBackend
 }
 
 async function showLogs(services) {
@@ -27,24 +74,8 @@ async function showLogs(services) {
     console.log("logs result", logs)
 }
 
-async function down() {
-    await compose.down({
-        cwd: dockerComposeLocation,
-        log: true
-    }).catch(err => {
-        console.log("docker-compose down error: ", err)
-    })
-}
-
-async function healthcheck() {
-    const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
-    const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
-    const hardHatServiceChecker = new HTTPChecker('Hard Hat Service checker', 'http://localhost:8545/')
-    const healthcheck = new Healthcheck([
-        identityServiceChecker,
-        reportServiceChecker,
-        hardHatServiceChecker
-    ])
+async function healthcheck(checkers) {
+    const healthcheck = new Healthcheck(checkers)
     let numberOfChecks = 0
     do {
         if (numberOfChecks >= maxNumberOfChecks) {
@@ -62,5 +93,5 @@ async function healthcheck() {
 }
 
 module.exports = {
-    up, down, showLogs
+    hardhat, backend, showLogs
 }

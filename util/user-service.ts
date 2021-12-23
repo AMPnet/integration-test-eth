@@ -58,6 +58,29 @@ export async function whitelistAddress(token: string, issuer: string, chainId: n
 
 }
 
+export async function requestFaucetFunds(address: string, chainId: number) {
+    try {
+        console.log(`Requesting faucet funds for address: ${address}, chainId: ${chainId}`)
+        await axios.post(`${baseUrl}/faucet/${chainId}/${address}`, {})
+    } catch (error) {
+        console.log("requestFaucetFunds error: ", error)
+    }
+}
+
+export async function autoInvest(token: string, campaign: string, amount: string, chainId: number) {
+    try {
+        axios.post(`${baseUrl}/auto_invest/${chainId}/${campaign}`, {
+            amount: amount
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+    } catch (error) {
+        console.log("autoInvest error: ", error)
+    }
+}
+
 interface PayloadResponse {
     payload: string
 }

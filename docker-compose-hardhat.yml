@@ -1,0 +1,17 @@
+version: '3'
+
+networks:
+  default:
+    driver: bridge
+    name: integration-test-eth
+
+services:
+  hardhat:
+    build:
+      context: .
+      dockerfile: hh-docker/Dockerfile
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "8545:8545"

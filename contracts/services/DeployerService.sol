@@ -6,17 +6,21 @@ import "../asset/IAsset.sol";
 import "../asset/IAssetFactory.sol";
 import "../asset-transferable/IAssetTransferable.sol";
 import "../asset-transferable/IAssetTransferableFactory.sol";
+import "../asset-simple/IAssetSimple.sol";
+import "../asset-simple/IAssetSimpleFactory.sol";
 import "../issuer/IIssuer.sol";
 import "../issuer/IIssuerFactory.sol";
 import "../managers/crowdfunding-softcap/ICfManagerSoftcap.sol";
 import "../managers/crowdfunding-softcap/ICfManagerSoftcapFactory.sol";
+import "../managers/crowdfunding-softcap-vesting/ICfManagerSoftcapVesting.sol";
+import "../managers/crowdfunding-softcap-vesting/ICfManagerSoftcapVestingFactory.sol";
 import "../tokens/erc20/IToken.sol";
 import "../shared/IVersioned.sol";
 
 contract DeployerService is IVersioned {
 
     string constant public FLAVOR = "DeployerServiceV1";
-    string constant public VERSION = "1.0.15";
+    string constant public VERSION = "1.0.21";
 
     event DeployIssuerAssetCampaign(
         address caller,
@@ -73,6 +77,7 @@ contract DeployerService is IVersioned {
         string cfManagerInfo;
         address apxRegistry;
         address nameRegistry;
+        address feeManager;
     }
 
     struct DeployAssetCampaignRequest {
@@ -98,6 +103,7 @@ contract DeployerService is IVersioned {
         string cfManagerInfo;
         address apxRegistry;
         address nameRegistry;
+        address feeManager;
     }
 
     struct DeployIssuerAssetTransferableCampaignRequest {
@@ -128,7 +134,7 @@ contract DeployerService is IVersioned {
         string cfManagerInfo;
         address apxRegistry;
         address nameRegistry;
-        address childChainManager;
+        address feeManager;
     }
 
     struct DeployAssetTransferableCampaignRequest {
@@ -154,7 +160,30 @@ contract DeployerService is IVersioned {
         string cfManagerInfo;
         address apxRegistry;
         address nameRegistry;
-        address childChainManager;
+        address feeManager;
+    }
+
+    struct DeployAssetSimpleCampaignVestingRequest {
+        IAssetSimpleFactory assetSimpleFactory;
+        ICfManagerSoftcapVestingFactory cfManagerSoftcapVestingFactory;
+        address issuer;
+        address assetOwner;
+        string assetMappedName;
+        uint256 assetInitialTokenSupply;
+        string assetName;
+        string assetSymbol;
+        string assetInfo;
+        address cfManagerOwner;
+        string cfManagerMappedName;
+        uint256 cfManagerPricePerToken;
+        uint256 cfManagerSoftcap;
+        uint256 cfManagerSoftcapMinInvestment;
+        uint256 cfManagerSoftcapMaxInvestment;
+        uint256 cfManagerTokensToSellAmount;
+        bool cfManagerWhitelistRequired;
+        string cfManagerInfo;
+        address nameRegistry;
+        address feeManager;
     }
 
     function flavor() external pure override returns (string memory) { return FLAVOR; }
@@ -196,7 +225,8 @@ contract DeployerService is IVersioned {
             request.cfManagerSoftcapMaxInvestment,
             request.cfManagerWhitelistRequired,
             request.cfManagerInfo,
-            request.nameRegistry
+            request.nameRegistry,
+            request.feeManager
         ));
 
         // Whitelist owners
@@ -248,7 +278,8 @@ contract DeployerService is IVersioned {
             request.cfManagerSoftcapMaxInvestment,
             request.cfManagerWhitelistRequired,
             request.cfManagerInfo,
-            request.nameRegistry
+            request.nameRegistry,
+            request.feeManager
         ));
 
         // Transfer tokens to sell to the campaign, transfer the rest to the asset owner's wallet
@@ -291,8 +322,7 @@ contract DeployerService is IVersioned {
                     request.assetWhitelistRequiredForLiquidationClaim,
                     request.assetName,
                     request.assetSymbol,
-                    request.assetInfo,
-                    request.childChainManager
+                    request.assetInfo
                 )
             )
         );
@@ -307,7 +337,8 @@ contract DeployerService is IVersioned {
             request.cfManagerSoftcapMaxInvestment,
             request.cfManagerWhitelistRequired,
             request.cfManagerInfo,
-            request.nameRegistry
+            request.nameRegistry,
+            request.feeManager
         ));
 
         // Whitelist issuer owner
@@ -350,8 +381,7 @@ contract DeployerService is IVersioned {
                     request.assetWhitelistRequiredForLiquidationClaim,
                     request.assetName,
                     request.assetSymbol,
-                    request.assetInfo,
-                    request.childChainManager
+                    request.assetInfo
                 )
         ));
         ICfManagerSoftcap campaign = ICfManagerSoftcap(request.cfManagerSoftcapFactory.create(
@@ -364,7 +394,52 @@ contract DeployerService is IVersioned {
             request.cfManagerSoftcapMaxInvestment,
             request.cfManagerWhitelistRequired,
             request.cfManagerInfo,
-            request.nameRegistry
+            request.nameRegistry,
+            request.feeManager
+        ));
+
+        // Transfer tokens to sell to the campaign, transfer the rest to the asset owner's wallet
+        uint256 tokensToSell = request.cfManagerTokensToSellAmount;
+        uint256 tokensToKeep = IERC20(address(asset)).totalSupply() - tokensToSell;
+        IERC20 assetERC20 = IERC20(address(asset));
+        assetERC20.transfer(address(campaign), tokensToSell);
+        assetERC20.transfer(request.assetOwner, tokensToKeep);
+
+        // Transfer ownerships from address(this) to the actual owner wallets
+        asset.changeOwnership(request.assetOwner);
+        campaign.changeOwnership(request.cfManagerOwner);
+
+        emit DeployAssetCampaign(msg.sender, address(asset), address(campaign), block.timestamp);
+    }
+
+    function deployAssetSimpleCampaignVesting(DeployAssetSimpleCampaignVestingRequest memory request) external {
+        // Deploy contracts
+        IAssetSimple asset = IAssetSimple(
+            request.assetSimpleFactory.create(
+                Structs.AssetSimpleFactoryParams(
+                    address(this),
+                    request.issuer,
+                    request.assetMappedName,
+                    request.nameRegistry,
+                    request.assetInitialTokenSupply,
+                    request.assetName,
+                    request.assetSymbol,
+                    request.assetInfo
+                )
+            )
+        );
+        ICfManagerSoftcapVesting campaign = ICfManagerSoftcapVesting(request.cfManagerSoftcapVestingFactory.create(
+            address(this),
+            request.cfManagerMappedName,
+            address(asset),
+            request.cfManagerPricePerToken,
+            request.cfManagerSoftcap,
+            request.cfManagerSoftcapMinInvestment,
+            request.cfManagerSoftcapMaxInvestment,
+            request.cfManagerWhitelistRequired,
+            request.cfManagerInfo,
+            request.nameRegistry,
+            request.feeManager
         ));
 
         // Transfer tokens to sell to the campaign, transfer the rest to the asset owner's wallet

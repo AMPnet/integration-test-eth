@@ -1,5 +1,10 @@
 version: '3'
 
+networks:
+  default:
+    external: true
+    name: integration-test-eth
+
 services:
   db:
     build:
@@ -16,7 +21,16 @@ services:
       - "spring.profiles.active=dev"
       - "com.ampnet.identityservice.test.enabled-test-kyc=true"
       - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-private-key=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"
-      - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-service-address=0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.wallet-approver-service-address=${WALLET_APPROVER_ADDRESS}"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.faucet-caller-private-key=0xf214f2b2cd398c806f84e317254e0f0b801d0643303237d97a22a48e01628897"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.faucet-service-address=${FAUCET_SERVICE_ADDRESS}"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.faucet-service-enabled=true"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.auto-invest-private-key=0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82"
+      - "com.ampnet.identityservice.chain-hardhat-testnet.auto-invest-service-address=${AUTO_INVEST_SERVICE_ADDRESS}"
+      - "com.ampnet.identityservice.auto-invest.processing-enabled=true"
+      - "com.ampnet.identityservice.auto-invest.queue.polling=10"
+      - "com.ampnet.identityservice.auto-invest.queue.initial-delay=1000"
+      - "com.ampnet.identityservice.auto-invest.queue.mining-period=10"
       - "com.ampnet.identityservice.queue.polling=10"
       - "com.ampnet.identityservice.queue.initial-delay=1000"
       - "com.ampnet.identityservice.queue.mining-period=10"
@@ -27,16 +41,6 @@ services:
     ports:
        - "8136:8136"
 
-  hardhat:
-    build:
-      context: .
-      dockerfile: hh-docker/Dockerfile
-    volumes:
-      - ./:/app
-      - /app/node_modules
-    ports:
-      - "8545:8545"
-
   report-service:
    image: ampnet/report-service-eth:latest
    environment:
@@ -44,8 +48,8 @@ services:
      - "management.endpoints.web.exposure.include=info,health,prometheus"
      - "com.ampnet.reportserviceeth.queue.polling=100"
      - "com.ampnet.reportserviceeth.queue.initial-delay=5000"
-     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.cf-manager-factory-addresses[0]=0x0165878A594ca255338adfa4d48449f69242Eb8F"
-     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.snapshot-distributor-addresses[0]=0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.cf-manager-factory-addresses[0]=${CF_MANAGER_FACTORY_ADDRESS_0}"
+     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.snapshot-distributor-addresses[0]=${SNAPSHOT_DISTRIBUTOR_ADDRESS_0}"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.start-block-number=0"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.num-of-confirmations=0"
      - "com.ampnet.reportserviceeth.chain-mumbai.cf-manager-factory-addresses[0]="

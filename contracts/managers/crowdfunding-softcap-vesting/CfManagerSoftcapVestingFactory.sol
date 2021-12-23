@@ -4,23 +4,28 @@ pragma solidity ^0.8.0;
 import "./CfManagerSoftcapVesting.sol";
 import "./ICfManagerSoftcapVestingFactory.sol";
 import "../../shared/IAssetCommon.sol";
+import "../../shared/ICampaignCommon.sol";
 import "../../registry/INameRegistry.sol";
 
 contract CfManagerSoftcapVestingFactory is ICfManagerSoftcapVestingFactory {
     
     string constant public FLAVOR = "CfManagerSoftcapVestingV1";
-    string constant public VERSION = "1.0.15";
+    string constant public VERSION = "1.0.24";
     
     address[] public instances;
     mapping (address => address[]) instancesPerIssuer;
     mapping (address => address[]) instancesPerAsset;
 
-    event CfManagerSoftcapCreated(
+    event CfManagerSoftcapVestingCreated(
         address indexed creator,
         address cfManager,
         address asset,
         uint256 timestamp
     );
+
+    constructor(address _oldFactory) { 
+        if (_oldFactory != address(0)) { _addInstances(ICfManagerSoftcapVestingFactory(_oldFactory).getInstances()); }
+    }
 
     function create(
         address owner,
@@ -32,12 +37,13 @@ contract CfManagerSoftcapVestingFactory is ICfManagerSoftcapVestingFactory {
         uint256 maxInvestment,
         bool whitelistRequired,
         string memory info,
-        address nameRegistry
+        address nameRegistry,
+        address feeManager
     ) external override returns (address) {
         INameRegistry registry = INameRegistry(nameRegistry);
         require(
             registry.getCampaign(mappedName) == address(0),
-            "CfManagerSoftcapFactory: campaign with this name already exists"
+            "CfManagerSoftcapVestingFactory: campaign with this name already exists"
         );
         address cfManagerSoftcap = address(new CfManagerSoftcapVesting(
             FLAVOR,
@@ -49,14 +55,12 @@ contract CfManagerSoftcapVestingFactory is ICfManagerSoftcapVestingFactory {
             minInvestment,
             maxInvestment,
             whitelistRequired,
-            info
+            info,
+            feeManager
         ));
-        instances.push(cfManagerSoftcap);
-        address issuer = IAssetCommon(assetAddress).commonState().issuer;
-        instancesPerIssuer[issuer].push(cfManagerSoftcap);
-        instancesPerAsset[assetAddress].push(cfManagerSoftcap);
+        _addInstance(cfManagerSoftcap);
         registry.mapCampaign(mappedName, cfManagerSoftcap);
-        emit CfManagerSoftcapCreated(owner, cfManagerSoftcap, address(assetAddress), block.timestamp);
+        emit CfManagerSoftcapVestingCreated(owner, cfManagerSoftcap, address(assetAddress), block.timestamp);
         return cfManagerSoftcap;
     }
 
@@ -68,6 +72,21 @@ contract CfManagerSoftcapVestingFactory is ICfManagerSoftcapVestingFactory {
 
     function getInstancesForAsset(address asset) external override view returns (address[] memory) {
         return instancesPerAsset[asset];
+    }
+
+    /////////// HELPERS ///////////
+
+    function _addInstances(address[] memory _instances) private {
+        if (_instances.length == 0) { return; }
+        for (uint256 i = 0; i < _instances.length; i++) { _addInstance(_instances[i]); }
+    }
+
+    function _addInstance(address _instance) private {
+        address asset = ICampaignCommon(_instance).commonState().asset;
+        address issuer = IAssetCommon(asset).commonState().issuer;
+        instances.push(_instance);
+        instancesPerIssuer[issuer].push(_instance);
+        instancesPerAsset[asset].push(_instance);
     }
 
 }
