@@ -61,9 +61,9 @@ export async function whitelistAddress(token: string, issuer: string, chainId: n
 export async function requestFaucetFunds(address: string, chainId: number) {
     try {
         console.log(`Requesting faucet funds for address: ${address}, chainId: ${chainId}`)
-        await axios.post(`${baseUrl}/faucet/${chainId}/${address}`)
+        await axios.post(`${baseUrl}/faucet/${chainId}/${address}`, {})
     } catch (error) {
-        console.log("requestFaucetFUnds error: ", error)
+        console.log("requestFaucetFunds error: ", error)
     }
 }
 
