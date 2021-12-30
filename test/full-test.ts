@@ -2,7 +2,7 @@
 import {ethers} from "hardhat";
 import {expect} from "chai";
 import * as helpers from "../util/helpers";
-import {it} from "mocha";
+import {after, it} from "mocha";
 import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
 import * as reportService from "../util/report-service";
@@ -213,7 +213,10 @@ describe("Full flow test", function () {
 
     afterEach(async function () {
         await db.clearDb()
-        await docker.backend.down()
         await docker.hardhat.down()
+    });
+
+    after(async function () {
+        await docker.backend.down()
     });
 })
