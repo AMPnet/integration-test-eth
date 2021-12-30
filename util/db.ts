@@ -26,8 +26,7 @@ export async function clearDb() {
         await identityDb.raw('TRUNCATE TABLE app_user CASCADE;')
         await identityDb.raw('TRUNCATE TABLE user_info CASCADE;')
         await identityDb.raw('TRUNCATE TABLE blockchain_task;')
-        await identityDb.raw('TRUNCATE TABLE faucet_task;')
-        await identityDb.raw('TRUNCATE TABLE pending_faucet_address;')
+        await identityDb.raw('TRUNCATE TABLE pending_blockchain_address;')
         await identityDb.raw('TRUNCATE TABLE auto_invest_task;')
         await identityDb.raw('TRUNCATE TABLE auto_invest_task_history;')
         await identityDb.raw('TRUNCATE TABLE auto_invest_transaction;')
@@ -35,4 +34,8 @@ export async function clearDb() {
         await reportDb.raw('TRUNCATE TABLE task;')
         resolve()
     })
+}
+
+export async function countBlockchainTasks(): Promise<any> {
+    return identityDb.raw('SELECT COUNT(*) FROM blockchain_task;')
 }

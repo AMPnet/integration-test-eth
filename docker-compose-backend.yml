@@ -31,9 +31,10 @@ services:
       - "com.ampnet.identityservice.auto-invest.queue.polling=10"
       - "com.ampnet.identityservice.auto-invest.queue.initial-delay=1000"
       - "com.ampnet.identityservice.auto-invest.queue.mining-period=10"
-      - "com.ampnet.identityservice.queue.polling=10"
+      - "com.ampnet.identityservice.queue.polling=2000"
       - "com.ampnet.identityservice.queue.initial-delay=1000"
       - "com.ampnet.identityservice.queue.mining-period=10"
+      - "com.ampnet.identityservice.wallet-approve.gas-limit=20000000"
       - "spring.mail.test-connection=false"
       - "management.health.mail.enabled=false"
     depends_on:
