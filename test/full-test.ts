@@ -1,12 +1,13 @@
 // @ts-ignore
 import {ethers} from "hardhat";
+import {Signer} from "ethers";
 import {expect} from "chai";
 import * as helpers from "../util/helpers";
 import {after, it} from "mocha";
 import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
 import * as reportService from "../util/report-service";
-import * as db from "../util/db"
+import * as db from "../util/db";
 import {DockerEnv} from "../util/types";
 import {TestData} from "../util/TestData";
 
@@ -25,6 +26,7 @@ describe("Full flow test", function () {
             SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.payoutManagerFactory.address
         };
         await docker.backend.up(dockerEnv);
+        await db.clearDb()
     });
 
     it("Should whitelist user and get tx history", async function () {
@@ -211,12 +213,47 @@ describe("Full flow test", function () {
         expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksInvestmentWei)
     });
 
+    it("Should whitelist multiple users in batch", async function () {
+        await testData.setupIssuerAssetAndCampaign({campaignWhitelistRequired: true});
+
+        const startAccount = 0;
+        const endAccount = 20;
+        const accounts: Signer[] = await ethers.getSigners();
+        for (let i = startAccount; i < endAccount; i++) {
+            await whitelistUser(accounts[i]);
+        }
+
+        await new Promise(f => setTimeout(f, 5000));
+        for (let i = startAccount; i < endAccount; i++) {
+            const address = await accounts[i].getAddress()
+            console.log("Checking address: ", address)
+            const isWalletApproved = await testData.issuer.isWalletApproved(address)
+            expect(isWalletApproved).to.be.true
+        }
+        const numberOfTaks = Number((await db.countBlockchainTasks()).rows[0].count)
+        expect(numberOfTaks).to.be.below(5, "Too many blockchain tasks for whitelisting")
+    });
+
     afterEach(async function () {
-        await db.clearDb()
         await docker.hardhat.down()
     });
 
     after(async function () {
         await docker.backend.down()
     });
+
+    async function whitelistUser(user: Signer) {
+        const address = await user.getAddress()
+        console.log("Whitelisting address: ", address)
+        const payload = await userService.getPayload(address)
+        const userAccessToken = await userService.getAccessToken(
+          address, await user.signMessage(payload)
+        )
+        await userService.completeKyc(userAccessToken, address)
+        await userService.whitelistAddress(
+          userAccessToken,
+          testData.issuer.address,
+          await user.getChainId()
+        )
+    }
 })
