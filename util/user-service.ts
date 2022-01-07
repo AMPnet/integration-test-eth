@@ -58,10 +58,13 @@ export async function whitelistAddress(token: string, issuer: string, chainId: n
 
 }
 
-export async function requestFaucetFunds(address: string, chainId: number) {
+export async function requestFaucetFunds(token: string, chainId: number) {
     try {
-        console.log(`Requesting faucet funds for address: ${address}, chainId: ${chainId}`)
-        await axios.post(`${baseUrl}/faucet/${chainId}/${address}`, {})
+        console.log(`Requesting faucet funds on chainId: ${chainId}`)
+        await axios.post(`${baseUrl}/faucet/${chainId}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }})
     } catch (error) {
         console.log("requestFaucetFunds error: ", error)
     }
