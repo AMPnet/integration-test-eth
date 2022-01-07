@@ -77,30 +77,31 @@ describe("Full flow test", function () {
         expect(await txHistory?.data.transactions.length).is.equal(3)
     });
 
-    it("Should only send faucet funds to accounts below faucet threshold", async function () {
-        // send some funds to the faucet contract
-        await testData.deployer.sendTransaction({
+    it.only("Should only send faucet funds to accounts below faucet threshold", async function () {
+        const fundedAddresses = [(testData.alice)]
+        await testData.alice.sendTransaction({
             to: testData.faucetService.address,
-            value: ethers.utils.parseEther("10")
-        });
-
-        // generate random user addresses below threshold (zero funds)
-        const fundedAddresses = Array.from({length: 10}, () => ethers.Wallet.createRandom().address)
+            value: ethers.utils.parseEther("9999.0000076")
+        })
 
         // existing accounts are already funded and therefore above faucet threshold
         const nonFundedAddresses = [
-            await testData.alice.getAddress(),
-            await testData.jane.getAddress(),
-            await testData.frank.getAddress(),
-            await testData.mark.getAddress()
+            testData.jane,
+            testData.frank,
+            testData.mark
         ]
 
         const allAddresses = [...fundedAddresses, ...nonFundedAddresses]
         const chainId = await testData.faucetCaller.getChainId()
 
         // request faucet funds for each account
-        for (let address of allAddresses) {
-            await userService.requestFaucetFunds(address, chainId)
+        for (let signer of allAddresses) {
+            const address = await signer.getAddress()
+            const payload = await userService.getPayload(address)
+            const token = await userService.getAccessToken(
+                address, await signer.signMessage(payload)
+            )
+            await userService.requestFaucetFunds(token, chainId)
         }
 
         // wait for faucet funds to be sent
@@ -108,16 +109,15 @@ describe("Full flow test", function () {
 
         const ethReward = ethers.utils.parseEther(testData.faucetReward)
 
+        const initialBalance = ethers.utils.parseEther("10000")
         // check wallet balances of funded addresses
-        for (const address of fundedAddresses) {
-            expect(await ethers.provider.getBalance(address)).to.be.equal(ethReward)
+        for (const signer of fundedAddresses) {
+            expect(await ethers.provider.getBalance(await signer.getAddress())).not.to.be.equal(initialBalance)
         }
 
-        const initialBalance = ethers.utils.parseEther("10000")
-
         // check wallet balances of non-funded addresses
-        for (const address of nonFundedAddresses) {
-            expect(await ethers.provider.getBalance(address)).to.be.equal(initialBalance)
+        for (const signer of nonFundedAddresses) {
+            expect(await ethers.provider.getBalance(await signer.getAddress())).to.be.equal(initialBalance)
         }
     });
 
@@ -239,7 +239,7 @@ describe("Full flow test", function () {
     });
 
     after(async function () {
-        await docker.backend.down()
+        // await docker.backend.down()
     });
 
     async function whitelistUser(user: Signer) {
