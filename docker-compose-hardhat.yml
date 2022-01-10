@@ -2,7 +2,7 @@ version: '3'
 
 networks:
   default:
-    driver: bridge
+    external: true
     name: integration-test-eth
 
 services:

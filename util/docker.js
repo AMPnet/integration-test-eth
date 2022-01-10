@@ -3,6 +3,7 @@ let path = require('path')
 let compose = require('docker-compose')
 let Healthcheck = require('@danielwpz/health-check')
 let HTTPChecker = Healthcheck.HTTPChecker
+let shell = require('child_process').exec
 
 const dockerComposeLocation = path.join(__dirname, '..')
 
@@ -11,11 +12,36 @@ const maxNumberOfChecks = 30       // maximum of 30 checks after giving up which
 
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
+async function shellCommand(command) {
+    await shell(command, function (error, stdout, stderr) {
+        console.log(`exec command: ${command}`)
+        console.log(stdout)
+        console.error(stderr)
+
+        if (error !== null) {
+            console.error(`exec error: ${error}`);
+        }
+    })
+}
+
+async function createNetwork() {
+    await shellCommand('docker network create --driver bridge integration-test-eth')
+}
+
+async function removeNetwork() {
+    await shellCommand('docker network rm integration-test-eth')
+}
+
+const network = {
+    create: createNetwork,
+    remove: removeNetwork
+}
+
 async function upHardhat() {
     await compose.upAll({
         cwd: dockerComposeLocation,
         log: true,
-        composeOptions: ["-f", "docker-compose-hardhat.yml"],
+        composeOptions: ["-f", "docker-compose-hardhat.yml", "-p", "integration-test-eth-hardhat"],
         commandOptions: ["--build"]
     }).catch(err => {
         console.log("docker-compose up error (hardhat): ", err)
@@ -27,23 +53,29 @@ async function upHardhat() {
 async function downHardhat() {
     await compose.down({
         cwd: dockerComposeLocation,
-        composeOptions: ["-f", "docker-compose-hardhat.yml"],
+        composeOptions: ["-f", "docker-compose-hardhat.yml", "-p", "integration-test-eth-hardhat"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (hardhat): ", err)
     })
 }
 
+async function restartHardhat() {
+    await downHardhat();
+    await upHardhat();
+}
+
 const hardhat = {
     up: upHardhat,
-    down: downHardhat
+    down: downHardhat,
+    restart: restartHardhat
 }
 
 async function upBackend(dockerEnv) {
     await compose.upAll({
         cwd: dockerComposeLocation,
         log: true,
-        composeOptions: ["-f", "docker-compose-backend.yml"],
+        composeOptions: ["-f", "docker-compose-backend.yml", "-p", "integration-test-eth-backend"],
         commandOptions: ["--build"],
         env: {...process.env, ...dockerEnv}
     }).catch(err => {
@@ -57,7 +89,7 @@ async function upBackend(dockerEnv) {
 async function downBackend() {
     await compose.down({
         cwd: dockerComposeLocation,
-        composeOptions: ["-f", "docker-compose-backend.yml"],
+        composeOptions: ["-f", "docker-compose-backend.yml", "-p", "integration-test-eth-backend"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (backend): ", err)
@@ -93,5 +125,5 @@ async function healthcheck(checkers) {
 }
 
 module.exports = {
-    hardhat, backend, showLogs
+    hardhat, backend, network, showLogs
 }

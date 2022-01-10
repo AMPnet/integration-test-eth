@@ -15,7 +15,8 @@ describe("Full flow test", function () {
 
     const testData = new TestData()
 
-    beforeEach(async function () {
+    before(async function () {
+        await docker.network.create();
         await docker.hardhat.up();
         await testData.setupContracts();
         const dockerEnv: DockerEnv = {
@@ -26,7 +27,18 @@ describe("Full flow test", function () {
             SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.payoutManagerFactory.address
         };
         await docker.backend.up(dockerEnv);
-        await db.clearDb()
+    });
+
+    beforeEach(async function () {
+        await db.clearDb();
+        await docker.hardhat.restart();
+        await testData.setupContracts();
+    });
+
+    after(async function () {
+        await docker.backend.down();
+        await docker.hardhat.down();
+        await docker.network.remove();
     });
 
     it("Should whitelist user and get tx history", async function () {
@@ -77,7 +89,7 @@ describe("Full flow test", function () {
         expect(await txHistory?.data.transactions.length).is.equal(3)
     });
 
-    it.only("Should only send faucet funds to accounts below faucet threshold", async function () {
+    it("Should only send faucet funds to accounts below faucet threshold", async function () {
         const fundedAddresses = [(testData.alice)]
         await testData.alice.sendTransaction({
             to: testData.faucetService.address,
@@ -232,14 +244,6 @@ describe("Full flow test", function () {
         }
         const numberOfTaks = Number((await db.countBlockchainTasks()).rows[0].count)
         expect(numberOfTaks).to.be.below(5, "Too many blockchain tasks for whitelisting")
-    });
-
-    afterEach(async function () {
-        await docker.hardhat.down()
-    });
-
-    after(async function () {
-        // await docker.backend.down()
     });
 
     async function whitelistUser(user: Signer) {
