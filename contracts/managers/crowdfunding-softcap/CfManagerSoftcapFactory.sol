@@ -9,9 +9,10 @@ import "../../registry/INameRegistry.sol";
 contract CfManagerSoftcapFactory is ICfManagerSoftcapFactory {
     
     string constant public FLAVOR = "CfManagerSoftcapV1";
-    string constant public VERSION = "1.0.24";
+    string constant public VERSION = "1.0.27";
     
     address[] public instances;
+    bool public initialized;
     mapping (address => address[]) instancesPerIssuer;
     mapping (address => address[]) instancesPerAsset;
 
@@ -73,10 +74,25 @@ contract CfManagerSoftcapFactory is ICfManagerSoftcapFactory {
         return instancesPerAsset[asset];
     }
 
+    function addInstancesForNewRegistry(
+        address oldFactory,
+        address oldNameRegistry,
+        address newNameRegistry
+    ) external override {
+        require(!initialized, "CfManagerSoftcapFactory: Already initialized");
+        address[] memory _instances = ICfManagerSoftcapFactory(oldFactory).getInstances();
+        for (uint256 i = 0; i < _instances.length; i++) {
+            address instance = _instances[i];
+            _addInstance(instance);
+            string memory oldName = INameRegistry(oldNameRegistry).getCampaignName(instance);
+            if (bytes(oldName).length > 0) { INameRegistry(newNameRegistry).mapCampaign(oldName, instance); }
+        }
+        initialized = true;
+    }
+
     /////////// HELPERS ///////////
 
     function _addInstances(address[] memory _instances) private {
-        if (_instances.length == 0) { return; }
         for (uint256 i = 0; i < _instances.length; i++) { _addInstance(_instances[i]); }
     }
 
