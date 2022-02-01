@@ -172,7 +172,15 @@ describe("Full flow test", function () {
         expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksInvestmentWei)
     });
 
-    it("Should auto-invest for campaign with KYC after user is whitelisted and receives funds", async function () {
+    it(
+    `
+        Should auto-invest for campaign with KYC after user is whitelisted and receives funds.\n
+        Test covers following 4 scenarios:\n
+        \t1) approve amount slighlty above the funds available at the wallet (✅)
+        \t2) approve amount exactly equal to the funds available at the wallet (✅)
+        \t3) approve amount slightly below the funds available at the wallet (✅)
+        \t4) approve amount equal to the minPerUserInvestment but the funds available slightly below this level (❌)
+    `, async function () {
         await testData.setupIssuerAssetAndCampaign({campaignWhitelistRequired: true});
 
         const franksAddress = await testData.frank.getAddress()
@@ -181,19 +189,24 @@ describe("Full flow test", function () {
           franksAddress,
           await testData.frank.signMessage(payload)
         )
-
-        //// Frank reserves $100k USDC for investment
-        const franksInvestment = 100000
-        const franksInvestmentWei = ethers.utils.parseUnits(franksInvestment.toString(), "6")
+        const balanceOffset = 1000000; // 1$ offset between allowance and the actual funds owned
         const chainId = await testData.frank.getChainId()
+        const deadAddress = "0x000000000000000000000000000000000000dEaD";
 
-        await testData.stablecoin.connect(testData.frank).approve(testData.cfManager.address, franksInvestmentWei)
+        /***** CASE 1: START *****/
+
+        // Frank reserves $100k USDC for investment
+        const franksInvestmentCase1 = 100000
+        const franksInvestmentCase1Wei = ethers.utils.parseUnits(franksInvestmentCase1.toString(), "6")
+        const franksApprovalCase1Wei = franksInvestmentCase1Wei.add(balanceOffset);
+
+        await testData.stablecoin.connect(testData.frank).approve(testData.cfManager.address, franksApprovalCase1Wei)
 
         // Frank request auto-invest
         await userService.autoInvest(
           franksAccessToken,
           testData.cfManager.address,
-          franksInvestmentWei.toString(),
+          franksApprovalCase1Wei.toString(),
           chainId
         )
 
@@ -202,7 +215,7 @@ describe("Full flow test", function () {
         expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(ethers.utils.parseEther("0"))
 
         //// Frank buys $100k USDC
-        await testData.stablecoin.transfer(franksAddress, franksInvestmentWei)
+        await testData.stablecoin.transfer(franksAddress, franksInvestmentCase1Wei)
 
         // auto-invest should not be completed after this - still needs whitelisting
         await new Promise(f => setTimeout(f, 5000))
@@ -222,7 +235,128 @@ describe("Full flow test", function () {
         // auto-invest should be completed after this
         await new Promise(f => setTimeout(f, 5000))
 
-        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksInvestmentWei)
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksInvestmentCase1Wei)
+        
+        // cancel investment and burn all of the frank funds returned from the campaign
+        await testData.cfManager.connect(testData.frank).cancelInvestment();
+        await testData.stablecoin.connect(testData.frank).transfer(
+            deadAddress,
+            await testData.stablecoin.balanceOf(franksAddress)
+        );
+
+        /***** CASE 1: END *****/
+
+
+        /***** CASE 2: START *****/
+
+        //// Frank reserves $100k USDC for investment
+        const franksInvestmentCase2 = 100000
+        const franksInvestmentCase2Wei = ethers.utils.parseUnits(franksInvestmentCase2.toString(), "6")
+
+        await testData.stablecoin.connect(testData.frank).approve(testData.cfManager.address, franksInvestmentCase2Wei)
+
+        // Frank request auto-invest
+        await userService.autoInvest(
+          franksAccessToken,
+          testData.cfManager.address,
+          franksInvestmentCase2Wei.toString(),
+          chainId
+        )
+
+        // auto-invest should not be triggered yet
+        await new Promise(f => setTimeout(f, 5000))
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(ethers.utils.parseEther("0"))
+
+        //// Frank buys $100k USDC
+        await testData.stablecoin.transfer(franksAddress, franksInvestmentCase2Wei)
+        
+        // auto-invest should be completed after this
+        await new Promise(f => setTimeout(f, 5000))
+
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksInvestmentCase2Wei)
+        
+        // cancel investment and burn all of the frank funds returned from the campaign
+        await testData.cfManager.connect(testData.frank).cancelInvestment();
+        await testData.stablecoin.connect(testData.frank).transfer(
+            deadAddress,
+            await testData.stablecoin.balanceOf(franksAddress)
+        );
+
+        /***** CASE 2: END *****/
+
+
+        /***** CASE 3: START *****/
+        
+        //// Frank reserves $100k USDC for investment
+        const franksInvestmentCase3 = 100000
+        const franksInvestmentCase3Wei = ethers.utils.parseUnits(franksInvestmentCase3.toString(), "6")
+        const franksApprovalCase3Wei = franksInvestmentCase3Wei.sub(balanceOffset);
+
+        await testData.stablecoin.connect(testData.frank).approve(testData.cfManager.address, franksApprovalCase3Wei)
+
+        // Frank request auto-invest
+        await userService.autoInvest(
+          franksAccessToken,
+          testData.cfManager.address,
+          franksApprovalCase3Wei.toString(),
+          chainId
+        )
+
+        // auto-invest should not be triggered yet
+        await new Promise(f => setTimeout(f, 5000))
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(ethers.utils.parseEther("0"))
+
+        //// Frank buys $100k USDC
+        await testData.stablecoin.transfer(franksAddress, franksInvestmentCase3Wei)
+        
+        // auto-invest should be completed after this
+        await new Promise(f => setTimeout(f, 5000))
+
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(franksApprovalCase3Wei)
+        
+        // cancel investment and burn all of the frank funds returned from the campaign
+        await testData.cfManager.connect(testData.frank).cancelInvestment();
+        await testData.stablecoin.connect(testData.frank).transfer(
+            deadAddress,
+            await testData.stablecoin.balanceOf(franksAddress)
+        );
+
+        /***** CASE 3: END *****/
+
+        
+        /***** CASE 4: START *****/
+        
+        //// Frank reserves $100k USDC for investment
+        const franksInvestmentCase4 = 9999  // minPerUserInvestment - 1
+        const franksInvestmentCase4Wei = ethers.utils.parseUnits(franksInvestmentCase4.toString(), "6")
+        const franksApprovalCase4Wei = 10000; // minPerUserInvestment
+
+        await testData.stablecoin.connect(testData.frank).approve(testData.cfManager.address, franksApprovalCase4Wei)
+
+        // Frank request auto-invest
+        await userService.autoInvest(
+          franksAccessToken,
+          testData.cfManager.address,
+          franksApprovalCase4Wei.toString(),
+          chainId
+        )
+
+        // auto-invest should not be triggered yet
+        await new Promise(f => setTimeout(f, 5000))
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(ethers.utils.parseEther("0"))
+
+        //// Frank buys $100k USDC
+        await testData.stablecoin.transfer(franksAddress, franksInvestmentCase4Wei)
+        
+        // auto-invest should be completed after this
+        await new Promise(f => setTimeout(f, 5000))
+
+        expect(await testData.cfManager.investmentAmount(franksAddress)).to.be.equal(0);
+        const numberOfAutoInvestTasks = Number((await db.countAutoInvestTasks()).rows[0].count)
+        expect(numberOfAutoInvestTasks).to.be.equal(0);
+
+        /***** CASE 4: END *****/
+
     });
 
     it("Should whitelist multiple users in batch", async function () {

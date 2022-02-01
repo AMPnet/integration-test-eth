@@ -10,10 +10,11 @@ import "../registry/INameRegistry.sol";
 contract AssetTransferableFactory is IAssetTransferableFactory {
 
     string constant public FLAVOR = "AssetTransferableV1";
-    string constant public VERSION = "1.0.21";
+    string constant public VERSION = "1.0.27";
     
     address public deployer;
     address[] public instances;
+    bool public initialized;
     mapping (address => address[]) instancesPerIssuer;
 
     event AssetTransferableCreated(address indexed creator, address asset, uint256 timestamp);
@@ -42,10 +43,25 @@ contract AssetTransferableFactory is IAssetTransferableFactory {
         return instancesPerIssuer[issuer];
     }
 
+    function addInstancesForNewRegistry(
+        address oldFactory,
+        address oldNameRegistry,
+        address newNameRegistry
+    ) external override {
+        require(!initialized, "AssetTransferableFactory: Already initialized");
+        address[] memory _instances = IAssetTransferableFactory(oldFactory).getInstances();
+        for (uint256 i = 0; i < _instances.length; i++) {
+            address instance = _instances[i];
+            _addInstance(instance);
+            string memory oldName = INameRegistry(oldNameRegistry).getAssetName(instance);
+            if (bytes(oldName).length > 0) { INameRegistry(newNameRegistry).mapAsset(oldName, instance); }
+        }
+        initialized = true;
+    }
+
     /////////// HELPERS ///////////
 
     function _addInstances(address[] memory _instances) private {
-        if (_instances.length == 0) { return; }
         for (uint256 i = 0; i < _instances.length; i++) { _addInstance(_instances[i]); }
     }
 

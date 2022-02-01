@@ -39,3 +39,7 @@ export async function clearDb() {
 export async function countBlockchainTasks(): Promise<any> {
     return identityDb.raw('SELECT COUNT(*) FROM blockchain_task;')
 }
+
+export async function countAutoInvestTasks(): Promise<any> {
+    return identityDb.raw('SELECT COUNT(*) FROM auto_invest_task;')
+}
