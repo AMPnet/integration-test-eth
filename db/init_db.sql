@@ -3,3 +3,6 @@ CREATE USER identity_service WITH PASSWORD 'password';
 
 CREATE DATABASE report_service_eth ENCODING 'UTF-8';
 CREATE USER report_service_eth WITH PASSWORD 'password';
+
+CREATE DATABASE payout_service_eth ENCODING 'UTF-8';
+CREATE USER payout_service_eth WITH PASSWORD 'password';

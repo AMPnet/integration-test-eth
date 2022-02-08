@@ -128,3 +128,6 @@ artifacts
 
 #Env
 .env
+
+# WireMock files
+wiremock/__files/*
