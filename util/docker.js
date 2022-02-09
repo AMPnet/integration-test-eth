@@ -84,7 +84,8 @@ async function upBackend(dockerEnv) {
     })
     const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
     const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
-    await healthcheck([identityServiceChecker, reportServiceChecker])
+    const payoutServiceChecker = new HTTPChecker('Payout Service checker', 'http://localhost:8138/actuator/health')
+    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker])
 }
 
 async function downBackend() {

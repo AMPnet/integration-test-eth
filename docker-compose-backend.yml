@@ -80,13 +80,14 @@ services:
     environment:
       - "server.port=8138"
       - "spring.profiles.active=dev"
-      - "spring.datasource.url=jdbc:postgresql://localhost:5432/payout_service_eth"
+      - "spring.datasource.url=jdbc:postgresql://db:5432/payout_service_eth"
       - "spring.datasource.username=payout_service_eth"
       - "spring.datasource.password=password"
       - "payoutservice.payout.check-asset-owner=false"
       - "payoutservice.ipfs.url=http://wiremock:8080"
       - "payoutservice.ipfs.api-key=api-key"
       - "payoutservice.ipfs.secret-api-key=secret-api-key"
+      - "INFURA_ID="
     depends_on:
       - db
       - wiremock

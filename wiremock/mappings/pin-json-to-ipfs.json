@@ -11,7 +11,7 @@
         "jsonBody": {
             "IpfsHash": "test-ipfs-hash",
             "PinSize": 0,
-            "Timestamp": "2022-01-01Z00:00:00Z"
+            "Timestamp": "2022-01-01T00:00:00Z"
         }
     }
 }

@@ -7,9 +7,11 @@ import {after, it} from "mocha";
 import * as docker from "../util/docker";
 import * as userService from "../util/user-service";
 import * as reportService from "../util/report-service";
+import * as payoutService from "../util/payout-service";
 import * as db from "../util/db";
 import {DockerEnv} from "../util/types";
 import {TestData} from "../tokenizer-prototype/test/TestData";
+import {ErrorResponse, FetchMerkleTreePathResponse} from "../util/payout-service";
 
 describe("Full flow test", function () {
 
@@ -379,6 +381,158 @@ describe("Full flow test", function () {
         }
         const numberOfTaks = Number((await db.countBlockchainTasks()).rows[0].count)
         expect(numberOfTaks).to.be.below(5, "Too many blockchain tasks for whitelisting")
+    });
+
+    it("Should create payout for some asset and allow users to claim funds", async function () {
+        const alicesAddress = await testData.alice.getAddress()
+        const janesAddress = await testData.jane.getAddress()
+        const franksAddress = await testData.frank.getAddress()
+        const marksAddress = await testData.mark.getAddress()
+
+        // set-up balances for payout
+        const alicesInvestment = ethers.utils.parseUnits("100000", "6")
+        const janesInvestment = ethers.utils.parseUnits("150000", "6")
+        const franksInvestment = ethers.utils.parseUnits("200000", "6")
+        await testData.stablecoin.transfer(alicesAddress, alicesInvestment)
+        await testData.stablecoin.transfer(janesAddress, janesInvestment)
+        await testData.stablecoin.transfer(franksAddress, franksInvestment)
+
+        const rewardAmount = ethers.utils.parseUnits("500000", "6") // two to one for payout (Alice and Jane)
+
+        // store block number for payout
+        const payoutBlockNumber = await ethers.provider.getBlockNumber()
+
+        // some additional transfers which should not be included in payout
+        await testData.stablecoin.transfer(marksAddress, ethers.utils.parseUnits("500000", "6"))
+        await testData.stablecoin.transfer(alicesAddress, ethers.utils.parseUnits("10000", "6"))
+        await testData.stablecoin.transfer(janesAddress, ethers.utils.parseUnits("30000", "6"))
+        await testData.stablecoin.transfer(franksAddress, ethers.utils.parseUnits("70000", "6"))
+
+        const chainId = await testData.alice.getChainId()
+
+        // create token for deployer
+        const deployersAddress = await testData.deployer.getAddress()
+        const payload = await userService.getPayload(deployersAddress)
+        const deployersAccessToken = await userService.getAccessToken(
+          deployersAddress,
+          await testData.deployer.signMessage(payload)
+        )
+
+        const ignoredAddresses = [deployersAddress, franksAddress]
+
+        const filter = {
+            fromBlock: "0x0",
+            toBlock: "0x1",
+            address: testData.stablecoin.address
+        }
+
+        // needed to make web3j on backend work correctly with hardhat test network
+        for (let i = 0; i < 16; i++) {
+            await ethers.provider.send("eth_newFilter", [filter])
+        }
+
+        // create payout tree
+        const payout = await payoutService.createPayout(
+          deployersAccessToken,
+          chainId,
+          testData.stablecoin.address,
+          payoutBlockNumber,
+          ignoredAddresses
+        )
+
+        // approve reward for payout
+        await testData.rewardStablecoin.approve(testData.payoutManager.address, rewardAmount)
+
+        // create payout on blockchain
+        await testData.payoutManager.connect(testData.deployer).createPayout(
+          testData.stablecoin.address,
+          payout.total_asset_amount,
+          payout.ignored_asset_addresses,
+          payout.merkle_root_hash,
+          payout.merkle_tree_depth,
+          payout.payout_block_number,
+          payout.merkle_tree_ipfs_hash,
+          testData.rewardStablecoin.address,
+          rewardAmount
+        )
+
+        // verify payout info
+        const payoutInfo = await testData.payoutManager.getPayoutInfo(0)
+        expect(payoutInfo.payoutId).to.be.equal(0)
+        expect(payoutInfo.payoutOwner).to.be.equal(deployersAddress)
+        expect(payoutInfo.isCanceled).to.be.equal(false)
+        expect(payoutInfo.asset).to.be.equal(testData.stablecoin.address)
+        expect(payoutInfo.totalAssetAmount).to.be.equal(payout.total_asset_amount)
+        expect(payoutInfo.ignoredAssetAddresses).to.have.members(ignoredAddresses)
+        expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(payout.merkle_root_hash)
+        expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(payout.merkle_tree_depth)
+        expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(payout.payout_block_number)
+        expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(payout.merkle_tree_ipfs_hash)
+        expect(payoutInfo.rewardAsset).to.be.equal(testData.rewardStablecoin.address)
+        expect(payoutInfo.totalRewardAmount).to.be.equal(rewardAmount)
+        expect(payoutInfo.remainingRewardAmount).to.be.equal(rewardAmount)
+
+        // get path, claim funds for Alice and verify they are received
+        const alicesPath = await payoutService.getPayoutPath(
+          chainId,
+          testData.stablecoin.address,
+          payoutInfo.assetSnapshotMerkleRoot,
+          alicesAddress
+        ) as FetchMerkleTreePathResponse
+        await testData.payoutManager.connect(testData.alice).claim(
+          payoutInfo.payoutId,
+          alicesPath.wallet_address,
+          alicesPath.wallet_balance,
+          alicesPath.proof
+        )
+
+        const alicesRewardBalance = await testData.rewardStablecoin.balanceOf(alicesAddress)
+        expect(alicesRewardBalance).to.be.equal(alicesInvestment.mul(2))
+
+        // get path, claim funds for Jane and verify they are received
+        const janesPath = await payoutService.getPayoutPath(
+          chainId,
+          testData.stablecoin.address,
+          payoutInfo.assetSnapshotMerkleRoot,
+          janesAddress
+        ) as FetchMerkleTreePathResponse
+        await testData.payoutManager.connect(testData.jane).claim(
+          payoutInfo.payoutId,
+          janesPath.wallet_address,
+          janesPath.wallet_balance,
+          janesPath.proof
+        )
+
+        const janesRewardBalance = await testData.rewardStablecoin.balanceOf(janesAddress)
+        expect(janesRewardBalance).to.be.equal(janesInvestment.mul(2))
+
+        // Frank's address was ignored while creating payout
+        const franksPath = await payoutService.getPayoutPath(
+          chainId,
+          testData.stablecoin.address,
+          payoutInfo.assetSnapshotMerkleRoot,
+          franksAddress,
+          true
+        ) as ErrorResponse
+        expect(franksPath.err_code).to.be.equal("0602")
+        expect(franksPath.description).to.be.equal("Payout does not exist for specified account")
+        expect(franksPath.message).to.be.equal(
+          "Payout does not exist for specified parameters or account is not included in payout"
+        )
+
+        // Mark got funds after payout was created, address is not included in payout
+        const marksPath = await payoutService.getPayoutPath(
+          chainId,
+          testData.stablecoin.address,
+          payoutInfo.assetSnapshotMerkleRoot,
+          marksAddress,
+          true
+        ) as ErrorResponse
+        expect(marksPath.err_code).to.be.equal("0602")
+        expect(marksPath.description).to.be.equal("Payout does not exist for specified account")
+        expect(marksPath.message).to.be.equal(
+          "Payout does not exist for specified parameters or account is not included in payout"
+        )
     });
 
     async function whitelistUser(user: Signer) {
