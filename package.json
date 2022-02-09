@@ -19,7 +19,7 @@
     "@types/node": "^17.0.5",
     "axios": "^0.24.0",
     "chai": "^4.3.4",
-    "docker-compose": "^0.23.14",
+    "docker-compose": "^0.23.17",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
     "hardhat": "^2.7.0",
