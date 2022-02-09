@@ -173,13 +173,12 @@ describe("Full flow test", function () {
     });
 
     it(
-    `
-        Should auto-invest for campaign with KYC after user is whitelisted and receives funds.\n
-        Test covers following 4 scenarios:\n
-        \t1) approve amount slighlty above the funds available at the wallet (✅)
-        \t2) approve amount exactly equal to the funds available at the wallet (✅)
-        \t3) approve amount slightly below the funds available at the wallet (✅)
-        \t4) approve amount equal to the minPerUserInvestment but the funds available slightly below this level (❌)
+    ` Should auto-invest for campaign with KYC after user is whitelisted and receives funds.
+        Test covers following 4 scenarios:
+            1) approve amount slightly above the funds available at the wallet (✅)
+            2) approve amount exactly equal to the funds available at the wallet (✅)
+            3) approve amount slightly below the funds available at the wallet (✅)
+            4) approve amount equal to the minPerUserInvestment but the funds available slightly below this level (❌)
     `, async function () {
         await testData.setupIssuerAssetAndCampaign({campaignWhitelistRequired: true});
 
