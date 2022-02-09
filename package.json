@@ -17,7 +17,7 @@
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.5",
-    "axios": "^0.24.0",
+    "axios": "^0.25.0",
     "chai": "^4.3.4",
     "docker-compose": "^0.23.17",
     "ethereum-waffle": "^3.4.0",
