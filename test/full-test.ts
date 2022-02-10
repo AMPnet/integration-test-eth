@@ -420,16 +420,7 @@ describe("Full flow test", function () {
 
         const ignoredAddresses = [deployersAddress, franksAddress]
 
-        const filter = {
-            fromBlock: "0x0",
-            toBlock: "0x1",
-            address: testData.stablecoin.address
-        }
-
-        // needed to make web3j on backend work correctly with hardhat test network
-        for (let i = 0; i < 16; i++) {
-            await ethers.provider.send("eth_newFilter", [filter])
-        }
+        await setupWeb3jFilter()
 
         // create payout tree
         const payout = await payoutService.createPayout(
@@ -441,7 +432,7 @@ describe("Full flow test", function () {
         )
 
         // approve reward for payout
-        await testData.rewardStablecoin.approve(testData.payoutManager.address, rewardAmount)
+        await testData.rewardCoin.approve(testData.payoutManager.address, rewardAmount)
 
         // create payout on blockchain
         await testData.payoutManager.connect(testData.deployer).createPayout(
@@ -452,7 +443,7 @@ describe("Full flow test", function () {
           payout.merkle_tree_depth,
           payout.payout_block_number,
           payout.merkle_tree_ipfs_hash,
-          testData.rewardStablecoin.address,
+          testData.rewardCoin.address,
           rewardAmount
         )
 
@@ -468,7 +459,7 @@ describe("Full flow test", function () {
         expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(payout.merkle_tree_depth)
         expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(payout.payout_block_number)
         expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(payout.merkle_tree_ipfs_hash)
-        expect(payoutInfo.rewardAsset).to.be.equal(testData.rewardStablecoin.address)
+        expect(payoutInfo.rewardAsset).to.be.equal(testData.rewardCoin.address)
         expect(payoutInfo.totalRewardAmount).to.be.equal(rewardAmount)
         expect(payoutInfo.remainingRewardAmount).to.be.equal(rewardAmount)
 
@@ -486,7 +477,7 @@ describe("Full flow test", function () {
           alicesPath.proof
         )
 
-        const alicesRewardBalance = await testData.rewardStablecoin.balanceOf(alicesAddress)
+        const alicesRewardBalance = await testData.rewardCoin.balanceOf(alicesAddress)
         expect(alicesRewardBalance).to.be.equal(alicesInvestment.mul(2))
 
         // get path, claim funds for Jane and verify they are received
@@ -503,7 +494,7 @@ describe("Full flow test", function () {
           janesPath.proof
         )
 
-        const janesRewardBalance = await testData.rewardStablecoin.balanceOf(janesAddress)
+        const janesRewardBalance = await testData.rewardCoin.balanceOf(janesAddress)
         expect(janesRewardBalance).to.be.equal(janesInvestment.mul(2))
 
         // Frank's address was ignored while creating payout
@@ -534,6 +525,19 @@ describe("Full flow test", function () {
           "Payout does not exist for specified parameters or account is not included in payout"
         )
     });
+
+    async function setupWeb3jFilter() {
+        const filter = {
+            fromBlock: "0x0",
+            toBlock: "0x1",
+            address: testData.stablecoin.address
+        }
+
+        // needed to make web3j on backend work correctly with hardhat test network
+        for (let i = 0; i < 16; i++) {
+            await ethers.provider.send("eth_newFilter", [filter])
+        }
+    }
 
     async function whitelistUser(user: Signer) {
         const address = await user.getAddress()
