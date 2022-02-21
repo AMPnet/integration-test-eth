@@ -7,7 +7,7 @@
     "lint": "npx hardhat check",
     "test": "npx hardhat test --network localhost",
     "node": "npx hardhat node",
-    "compile": "cd tokenizer-prototype && npx hardhat compile && cp -r artifacts .. && cp -r cache .."
+    "compile": "cd tokenizer-prototype && npm ci && npx hardhat compile && cp -r artifacts .. && cp -r cache .."
   },
   "author": "",
   "license": "ISC",
