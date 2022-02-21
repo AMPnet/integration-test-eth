@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "npx hardhat check",
     "test": "npx hardhat test --network localhost",
-    "node": "npx hardhat node"
+    "node": "npx hardhat node",
+    "compile": "cd tokenizer-prototype && npx hardhat compile && cp -r artifacts .. && cp -r cache .."
   },
   "author": "",
   "license": "ISC",
@@ -27,8 +28,5 @@
     "pg": "^8.7.1",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.5"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^4.4.2"
   }
 }
