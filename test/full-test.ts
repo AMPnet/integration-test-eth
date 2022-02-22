@@ -88,7 +88,6 @@ describe("Full flow test", function () {
         await new Promise(f => setTimeout(f, 2000))
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, testData.issuer.address, await testData.issuerOwner.getChainId())
-        // TODO: checkout problem with events
         expect(await txHistory?.data.transactions.length).is.equal(3)
     });
 
