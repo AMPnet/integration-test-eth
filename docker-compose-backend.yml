@@ -50,6 +50,7 @@ services:
      - "com.ampnet.reportserviceeth.queue.polling=100"
      - "com.ampnet.reportserviceeth.queue.initial-delay=5000"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.cf-manager-factory-addresses[0]=${CF_MANAGER_FACTORY_ADDRESS_0}"
+     - "com.ampnet.reportserviceeth.chain-hardhat-testnet.cf-manager-factory-addresses[1]=${CF_MANAGER_FACTORY_ADDRESS_1}"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.snapshot-distributor-addresses[0]=${SNAPSHOT_DISTRIBUTOR_ADDRESS_0}"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.start-block-number=0"
      - "com.ampnet.reportserviceeth.chain-hardhat-testnet.num-of-confirmations=0"

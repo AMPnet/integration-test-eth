@@ -8,5 +8,6 @@ export interface DockerEnv {
     FAUCET_SERVICE_ADDRESS: string
     AUTO_INVEST_SERVICE_ADDRESS: string
     CF_MANAGER_FACTORY_ADDRESS_0: string
+    CF_MANAGER_FACTORY_ADDRESS_1: string
     SNAPSHOT_DISTRIBUTOR_ADDRESS_0: string
 }

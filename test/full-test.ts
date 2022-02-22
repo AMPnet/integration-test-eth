@@ -24,7 +24,9 @@ describe("Full flow test", function () {
             FAUCET_SERVICE_ADDRESS: testData.faucetService.address,
             AUTO_INVEST_SERVICE_ADDRESS: testData.investService.address,
             CF_MANAGER_FACTORY_ADDRESS_0: testData.cfManagerFactory.address,
-            SNAPSHOT_DISTRIBUTOR_ADDRESS_0: "" // TODO: use payout manager
+            CF_MANAGER_FACTORY_ADDRESS_1: testData.cfManagerVestingFactory.address,
+            // TODO: remove after updating report-service to use payout manager
+            SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.cfManagerVestingFactory.address
         };
         await docker.backend.up(dockerEnv);
     });
@@ -87,7 +89,7 @@ describe("Full flow test", function () {
         const txHistory = await reportService
             .getTxHistory(franksAccessToken, testData.issuer.address, await testData.issuerOwner.getChainId())
         // TODO: checkout problem with events
-        // expect(await txHistory?.data.transactions.length).is.equal(3)
+        expect(await txHistory?.data.transactions.length).is.equal(3)
     });
 
     it("Should only send faucet funds to accounts below faucet threshold", async function () {
