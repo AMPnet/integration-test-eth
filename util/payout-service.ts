@@ -7,20 +7,109 @@ export async function createPayout(
   chainId: number,
   assetAddress: string,
   payoutBlockNumber: number,
-  ignoredAssetAddresses: string[]
+  ignoredAssetAddresses: string[],
+  issuerAddress?: string
 ): Promise<CreatePayoutResponse> {
     try {
-        const { data } = await axios.post<CreatePayoutResponse>(`${baseUrl}/payout/${chainId}/${assetAddress}/create`, {
-            payout_block_number: payoutBlockNumber,
-            ignored_asset_addresses: ignoredAssetAddresses
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const { data } = await axios.post<CreatePayoutResponse>(
+            `${baseUrl}/payouts/${chainId}/${assetAddress}/create`,
+            {
+                payout_block_number: payoutBlockNumber,
+                ignored_asset_addresses: ignoredAssetAddresses,
+                issuer_address: issuerAddress
+            },
+            {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
             }
-        })
+        )
         return data
     } catch (error) {
         console.log("createPayout error: ", error)
+    }
+}
+
+export async function getPayoutTaskById(
+  token: string,
+  chainId: number,
+  taskId: string
+): Promise<PayoutResponse> {
+    try {
+        const { data } = await axios.get<PayoutResponse>(
+            `${baseUrl}/payouts/${chainId}/task/${taskId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        return data
+    } catch (error) {
+        console.log("getPayoutTaskById error: ", error)
+    }
+}
+
+export async function getPayouts(
+  token: string,
+  chainId: number,
+  assetFactories: string[],
+  payoutService: string,
+  payoutManager: string,
+  issuer?: string,
+  owner?: string,
+  status?: PayoutStatus[]
+): Promise<AdminPayoutsResponse> {
+    try {
+        const { data } = await axios.get<AdminPayoutsResponse>(
+            `${baseUrl}/payouts/${chainId}`,
+            {
+                params: {
+                    assetFactories: assetFactories.join(","),
+                    payoutService: payoutService,
+                    payoutManager: payoutManager,
+                    issuer: issuer,
+                    owner: owner,
+                    status: status?.join(",")
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        return data
+    } catch (error) {
+        console.log("getPayouts error: ", error)
+    }
+}
+
+export async function getPayoutsForInvestor(
+  token: string,
+  chainId: number,
+  investorAddress: string,
+  assetFactories: string[],
+  payoutService: string,
+  payoutManager: string,
+  issuer?: string
+): Promise<InvestorPayoutsResponse> {
+    try {
+        const { data } = await axios.get<InvestorPayoutsResponse>(
+            `${baseUrl}/payouts/${chainId}/investor/${investorAddress}`,
+            {
+                params: {
+                    assetFactories: assetFactories.join(","),
+                    payoutService: payoutService,
+                    payoutManager: payoutManager,
+                    issuer: issuer
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        )
+        return data
+    } catch (error) {
+        console.log("getPayoutsForInvestor error: ", error)
     }
 }
 
@@ -31,7 +120,7 @@ export async function getPayoutTree(
 ): Promise<FetchMerkleTreeResponse> {
     try {
         const { data } = await axios.get<FetchMerkleTreeResponse>(
-          `${baseUrl}/payout_info/${chainId}/${assetAddress}/tree/${rootHash}`
+            `${baseUrl}/payout_info/${chainId}/${assetAddress}/tree/${rootHash}`
         )
         return data
     } catch (error) {
@@ -48,7 +137,7 @@ export async function getPayoutPath(
 ): Promise<FetchMerkleTreePathResponse | ErrorResponse> {
     try {
         const { data } = await axios.get<FetchMerkleTreePathResponse>(
-          `${baseUrl}/payout_info/${chainId}/${assetAddress}/tree/${rootHash}/path/${walletAddress}`
+            `${baseUrl}/payout_info/${chainId}/${assetAddress}/tree/${rootHash}/path/${walletAddress}`
         )
         return data
     } catch (error) {
@@ -66,12 +155,51 @@ export interface ErrorResponse {
 }
 
 export interface CreatePayoutResponse {
-    total_asset_amount: string,
+    task_id: string
+}
+
+export type PayoutStatus = "PROOF_PENDING" | "PROOF_FAILED" | "PROOF_CREATED" | "PAYOUT_CREATED"
+
+export interface PayoutResponse {
+    taskId?: string,
+    status: PayoutStatus,
+    issuer?: string,
+
+    payout_id?: string,
+    payout_owner: string,
+    payout_info?: string,
+    is_canceled?: boolean,
+
+    asset: string,
+    total_asset_amount?: number,
     ignored_asset_addresses: string[],
-    payout_block_number: string,
-    merkle_root_hash: string,
-    merkle_tree_ipfs_hash: string,
-    merkle_tree_depth: number
+
+    asset_snapshot_merkle_root?: string,
+    asset_snapshot_merkle_depth?: number,
+    asset_snapshot_block_number: string,
+    asset_snapshot_merkle_ipfs_hash: string,
+
+    reward_asset?: string,
+    total_reward_amount?: string,
+    remaining_reward_amount?: string
+}
+
+export interface AdminPayoutsResponse {
+    payouts: PayoutResponse[]
+}
+
+export interface InvestorPayoutResponse {
+    payout: PayoutResponse,
+    investor: string,
+    amount_claimed: string,
+
+    amount_claimable?: string,
+    balance?: string,
+    proof?: string[]
+}
+
+export interface InvestorPayoutsResponse {
+    payouts: InvestorPayoutResponse[]
 }
 
 export type Node = NilNode | LeafNode | PathNode

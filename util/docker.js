@@ -54,7 +54,7 @@ async function downHardhat() {
     await compose.down({
         cwd: dockerComposeLocation,
         composeOptions: ["-f", "docker-compose-hardhat.yml", "-p", "integration-test-eth-hardhat"],
-        commandOptions: ["-v"],
+        commandOptions: ["-v", "--rmi", "local"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (hardhat): ", err)
@@ -92,7 +92,7 @@ async function downBackend() {
     await compose.down({
         cwd: dockerComposeLocation,
         composeOptions: ["-f", "docker-compose-backend.yml", "-p", "integration-test-eth-backend"],
-        commandOptions: ["-v"],
+        commandOptions: ["-v", "--rmi", "local"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (backend): ", err)

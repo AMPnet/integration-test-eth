@@ -11,15 +11,19 @@ import * as payoutService from "../util/payout-service";
 import * as db from "../util/db";
 import {DockerEnv} from "../util/types";
 import {TestData} from "../tokenizer-prototype/test/TestData";
-import {ErrorResponse, FetchMerkleTreePathResponse} from "../util/payout-service";
+import {InvestorPayoutsResponse, PayoutResponse} from "../util/payout-service";
 
 describe("Full flow test", function () {
 
-    const testData = new TestData()
+    let testData!: TestData
 
     before(async function () {
         await docker.network.create();
         await docker.hardhat.up();
+    });
+
+    beforeEach(async function () {
+        testData = new TestData();
         await testData.deploy();
         const dockerEnv: DockerEnv = {
             WALLET_APPROVER_ADDRESS: testData.walletApproverService.address,
@@ -31,16 +35,14 @@ describe("Full flow test", function () {
             SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.cfManagerVestingFactory.address
         };
         await docker.backend.up(dockerEnv);
+        await db.clearDb();
     });
 
-    beforeEach(async function () {
-        await db.clearDb();
-        await docker.hardhat.restart();
-        await testData.deploy();
+    afterEach(async function () {
+        await docker.backend.down();
     });
 
     after(async function () {
-        await docker.backend.down();
         await docker.hardhat.down();
         await docker.network.remove();
     });
@@ -94,7 +96,7 @@ describe("Full flow test", function () {
     });
 
     it("Should only send faucet funds to accounts below faucet threshold", async function () {
-        const fundedAddresses = [(testData.alice)]
+        const fundedAddresses = [testData.alice]
         await testData.alice.sendTransaction({
             to: testData.faucetService.address,
             value: ethers.utils.parseEther("9999.0000076")
@@ -106,6 +108,13 @@ describe("Full flow test", function () {
             testData.frank,
             testData.mark
         ]
+
+        // store initial funded account balances - used for compatibility when running together with all tests
+        const initialBalances = {}
+        for (const signer of nonFundedAddresses) {
+            const address = await signer.getAddress()
+            initialBalances[address] = await ethers.provider.getBalance(address)
+        }
 
         const allAddresses = [...fundedAddresses, ...nonFundedAddresses]
         const chainId = await testData.walletApprover.getChainId()
@@ -123,8 +132,6 @@ describe("Full flow test", function () {
         // wait for faucet funds to be sent
         await new Promise(f => setTimeout(f, 5000))
 
-        const ethReward = ethers.utils.parseEther(testData.faucetReward)
-
         const initialBalance = ethers.utils.parseEther("10000")
         // check wallet balances of funded addresses
         for (const signer of fundedAddresses) {
@@ -133,7 +140,8 @@ describe("Full flow test", function () {
 
         // check wallet balances of non-funded addresses
         for (const signer of nonFundedAddresses) {
-            expect(await ethers.provider.getBalance(await signer.getAddress())).to.be.equal(initialBalance)
+            const address = await signer.getAddress()
+            expect(await ethers.provider.getBalance(address)).to.be.equal(initialBalances[address])
         }
     });
 
@@ -379,151 +387,189 @@ describe("Full flow test", function () {
             const isWalletApproved = await testData.issuer.isWalletApproved(address)
             expect(isWalletApproved).to.be.true
         }
-        const numberOfTaks = Number((await db.countBlockchainTasks()).rows[0].count)
-        expect(numberOfTaks).to.be.below(5, "Too many blockchain tasks for whitelisting")
+        const numberOfTasks = Number((await db.countBlockchainTasks()).rows[0].count)
+        expect(numberOfTasks).to.be.below(5, "Too many blockchain tasks for whitelisting")
     });
 
     it("Should create payout for some asset and allow users to claim funds", async function () {
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false})
+
         const alicesAddress = await testData.alice.getAddress()
         const janesAddress = await testData.jane.getAddress()
         const franksAddress = await testData.frank.getAddress()
         const marksAddress = await testData.mark.getAddress()
 
         // set-up balances for payout
-        const alicesInvestment = ethers.utils.parseUnits("100000", "6")
-        const janesInvestment = ethers.utils.parseUnits("150000", "6")
-        const franksInvestment = ethers.utils.parseUnits("200000", "6")
-        await testData.stablecoin.transfer(alicesAddress, alicesInvestment)
-        await testData.stablecoin.transfer(janesAddress, janesInvestment)
-        await testData.stablecoin.transfer(franksAddress, franksInvestment)
+        const alicesInvestment = ethers.utils.parseEther("10000")
+        const janesInvestment = ethers.utils.parseEther("15000")
+        const franksInvestment = ethers.utils.parseEther("20000")
+        await testData.asset.connect(testData.issuerOwner).transfer(alicesAddress, alicesInvestment)
+        await testData.asset.connect(testData.issuerOwner).transfer(janesAddress, janesInvestment)
+        await testData.asset.connect(testData.issuerOwner).transfer(franksAddress, franksInvestment)
 
-        const rewardAmount = ethers.utils.parseUnits("500000", "6") // two to one for payout (Alice and Jane)
+        const rewardAmount = ethers.utils.parseEther("50000") // two to one for payout (Alice and Jane)
 
         // store block number for payout
         const payoutBlockNumber = await ethers.provider.getBlockNumber()
 
         // some additional transfers which should not be included in payout
-        await testData.stablecoin.transfer(marksAddress, ethers.utils.parseUnits("500000", "6"))
-        await testData.stablecoin.transfer(alicesAddress, ethers.utils.parseUnits("10000", "6"))
-        await testData.stablecoin.transfer(janesAddress, ethers.utils.parseUnits("30000", "6"))
-        await testData.stablecoin.transfer(franksAddress, ethers.utils.parseUnits("70000", "6"))
+        await testData.asset.connect(testData.issuerOwner).transfer(marksAddress, ethers.utils.parseEther("1000"))
+        await testData.asset.connect(testData.issuerOwner).transfer(alicesAddress, ethers.utils.parseEther("1000"))
+        await testData.asset.connect(testData.issuerOwner).transfer(janesAddress, ethers.utils.parseEther("1000"))
+        await testData.asset.connect(testData.issuerOwner).transfer(franksAddress, ethers.utils.parseEther("1000"))
 
         const chainId = await testData.alice.getChainId()
 
         // create token for deployer
-        const deployersAddress = await testData.deployer.getAddress()
-        const payload = await userService.getPayload(deployersAddress)
-        const deployersAccessToken = await userService.getAccessToken(
-          deployersAddress,
-          await testData.deployer.signMessage(payload)
+        const issuerOwnerAddress = await testData.issuerOwner.getAddress()
+        const payload = await userService.getPayload(issuerOwnerAddress)
+        const issuerOwnerAccessToken = await userService.getAccessToken(
+          issuerOwnerAddress,
+          await testData.issuerOwner.signMessage(payload)
         )
 
-        const ignoredAddresses = [deployersAddress, franksAddress]
+        const ignoredAddresses = [issuerOwnerAddress, franksAddress, testData.cfManager.address]
 
         await setupWeb3jFilter()
 
-        // create payout tree
-        const payout = await payoutService.createPayout(
-          deployersAccessToken,
+        // request payout tree creation
+        const createPayoutResponse = await payoutService.createPayout(
+          issuerOwnerAccessToken,
           chainId,
-          testData.stablecoin.address,
+          testData.asset.address,
           payoutBlockNumber,
           ignoredAddresses
         )
 
+        // wait for payout tree to be created
+        let payout: PayoutResponse
+        let maxRetries = 10
+        do {
+            await new Promise(f => setTimeout(f, 5000))
+            payout = await payoutService.getPayoutTaskById(
+              issuerOwnerAccessToken,
+              chainId,
+              createPayoutResponse.task_id
+            )
+            maxRetries -= 1
+        } while (payout.status != "PROOF_CREATED" && maxRetries > 0)
+
+        const rewardCoin = await helpers.deployStablecoin(testData.issuerOwner, "1000000000000", 18)
+
         // approve reward for payout
-        await testData.rewardCoin.approve(testData.payoutManager.address, rewardAmount)
+        await rewardCoin.connect(testData.issuerOwner).approve(testData.payoutManager.address, rewardAmount)
 
         // create payout on blockchain
-        await testData.payoutManager.connect(testData.deployer).createPayout(
-          testData.stablecoin.address,
-          payout.total_asset_amount,
-          payout.ignored_asset_addresses,
-          payout.merkle_root_hash,
-          payout.merkle_tree_depth,
-          payout.payout_block_number,
-          payout.merkle_tree_ipfs_hash,
-          testData.rewardCoin.address,
-          rewardAmount
+        const testInfo = "test-info"
+        await testData.payoutManager.connect(testData.issuerOwner).createPayout(
+          {
+              asset: testData.asset.address,
+              totalAssetAmount: payout.total_asset_amount,
+              ignoredAssetAddresses: payout.ignored_asset_addresses,
+              payoutInfo: testInfo,
+              assetSnapshotMerkleRoot: payout.asset_snapshot_merkle_root,
+              assetSnapshotMerkleDepth: payout.asset_snapshot_merkle_depth,
+              assetSnapshotBlockNumber: payout.asset_snapshot_block_number,
+              assetSnapshotMerkleIpfsHash: payout.asset_snapshot_merkle_ipfs_hash,
+              rewardAsset: rewardCoin.address,
+              totalRewardAmount: rewardAmount
+          }
         )
 
         // verify payout info
         const payoutInfo = await testData.payoutManager.getPayoutInfo(0)
         expect(payoutInfo.payoutId).to.be.equal(0)
-        expect(payoutInfo.payoutOwner).to.be.equal(deployersAddress)
+        expect(payoutInfo.payoutOwner).to.be.equal(issuerOwnerAddress)
+        expect(payoutInfo.payoutInfo).to.be.equal(testInfo)
         expect(payoutInfo.isCanceled).to.be.equal(false)
-        expect(payoutInfo.asset).to.be.equal(testData.stablecoin.address)
+        expect(payoutInfo.asset).to.be.equal(testData.asset.address)
         expect(payoutInfo.totalAssetAmount).to.be.equal(payout.total_asset_amount)
         expect(payoutInfo.ignoredAssetAddresses).to.have.members(ignoredAddresses)
-        expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(payout.merkle_root_hash)
-        expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(payout.merkle_tree_depth)
-        expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(payout.payout_block_number)
-        expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(payout.merkle_tree_ipfs_hash)
-        expect(payoutInfo.rewardAsset).to.be.equal(testData.rewardCoin.address)
+        expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(payout.asset_snapshot_merkle_root)
+        expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(payout.asset_snapshot_merkle_depth)
+        expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(payout.asset_snapshot_block_number)
+        expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(payout.asset_snapshot_merkle_ipfs_hash)
+        expect(payoutInfo.rewardAsset).to.be.equal(rewardCoin.address)
         expect(payoutInfo.totalRewardAmount).to.be.equal(rewardAmount)
         expect(payoutInfo.remainingRewardAmount).to.be.equal(rewardAmount)
 
+        const assetFactories = [
+            testData.assetFactory.address,
+            testData.assetSimpleFactory.address,
+            testData.assetTransferableFactory.address
+        ]
+
         // get path, claim funds for Alice and verify they are received
-        const alicesPath = await payoutService.getPayoutPath(
+        const alicesPayouts = await payoutService.getPayoutsForInvestor(
+          issuerOwnerAccessToken,
           chainId,
-          testData.stablecoin.address,
-          payoutInfo.assetSnapshotMerkleRoot,
-          alicesAddress
-        ) as FetchMerkleTreePathResponse
+          alicesAddress,
+          assetFactories,
+          testData.payoutService.address,
+          testData.payoutManager.address,
+          testData.issuer.address
+        ) as InvestorPayoutsResponse
+
+        expect(alicesPayouts.payouts.length).to.be.equal(1)
+
         await testData.payoutManager.connect(testData.alice).claim(
           payoutInfo.payoutId,
-          alicesPath.wallet_address,
-          alicesPath.wallet_balance,
-          alicesPath.proof
+          alicesPayouts.payouts[0].investor,
+          alicesPayouts.payouts[0].balance,
+          alicesPayouts.payouts[0].proof
         )
 
-        const alicesRewardBalance = await testData.rewardCoin.balanceOf(alicesAddress)
+        const alicesRewardBalance = await rewardCoin.balanceOf(alicesAddress)
         expect(alicesRewardBalance).to.be.equal(alicesInvestment.mul(2))
 
         // get path, claim funds for Jane and verify they are received
-        const janesPath = await payoutService.getPayoutPath(
+        const janesPayouts = await payoutService.getPayoutsForInvestor(
+          issuerOwnerAccessToken,
           chainId,
-          testData.stablecoin.address,
-          payoutInfo.assetSnapshotMerkleRoot,
-          janesAddress
-        ) as FetchMerkleTreePathResponse
+          janesAddress,
+          assetFactories,
+          testData.payoutService.address,
+          testData.payoutManager.address,
+          testData.issuer.address
+        ) as InvestorPayoutsResponse
+
+        expect(janesPayouts.payouts.length).to.be.equal(1)
+
         await testData.payoutManager.connect(testData.jane).claim(
           payoutInfo.payoutId,
-          janesPath.wallet_address,
-          janesPath.wallet_balance,
-          janesPath.proof
+          janesPayouts.payouts[0].investor,
+          janesPayouts.payouts[0].balance,
+          janesPayouts.payouts[0].proof
         )
 
-        const janesRewardBalance = await testData.rewardCoin.balanceOf(janesAddress)
+        const janesRewardBalance = await rewardCoin.balanceOf(janesAddress)
         expect(janesRewardBalance).to.be.equal(janesInvestment.mul(2))
 
         // Frank's address was ignored while creating payout
-        const franksPath = await payoutService.getPayoutPath(
+        const franksPayouts = await payoutService.getPayoutsForInvestor(
+          issuerOwnerAccessToken,
           chainId,
-          testData.stablecoin.address,
-          payoutInfo.assetSnapshotMerkleRoot,
           franksAddress,
-          true
-        ) as ErrorResponse
-        expect(franksPath.err_code).to.be.equal("0602")
-        expect(franksPath.description).to.be.equal("Payout does not exist for specified account")
-        expect(franksPath.message).to.be.equal(
-          "Payout does not exist for specified parameters or account is not included in payout"
-        )
+          assetFactories,
+          testData.payoutService.address,
+          testData.payoutManager.address,
+          testData.issuer.address
+        ) as InvestorPayoutsResponse
+
+        expect(franksPayouts.payouts.length).to.be.equal(0)
 
         // Mark got funds after payout was created, address is not included in payout
-        const marksPath = await payoutService.getPayoutPath(
+        const marksPayouts = await payoutService.getPayoutsForInvestor(
+          issuerOwnerAccessToken,
           chainId,
-          testData.stablecoin.address,
-          payoutInfo.assetSnapshotMerkleRoot,
           marksAddress,
-          true
-        ) as ErrorResponse
-        expect(marksPath.err_code).to.be.equal("0602")
-        expect(marksPath.description).to.be.equal("Payout does not exist for specified account")
-        expect(marksPath.message).to.be.equal(
-          "Payout does not exist for specified parameters or account is not included in payout"
-        )
+          assetFactories,
+          testData.payoutService.address,
+          testData.payoutManager.address,
+          testData.issuer.address
+        ) as InvestorPayoutsResponse
+
+        expect(marksPayouts.payouts.length).to.be.equal(0)
     });
 
     async function setupWeb3jFilter() {
