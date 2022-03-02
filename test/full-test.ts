@@ -443,12 +443,14 @@ describe("Full flow test", function () {
           payoutBlockNumber,
           ignoredAddresses
         )
+        console.log(`created payout task: ${createPayoutResponse.task_id}`)
 
         // wait for payout tree to be created
         let payout: PayoutResponse
         let maxRetries = 10
         do {
             await new Promise(f => setTimeout(f, 5000))
+            console.log(`get payout task: ${createPayoutResponse.task_id}`)
             payout = await payoutService.getPayoutTaskById(
               issuerOwnerAccessToken,
               chainId,
