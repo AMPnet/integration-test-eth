@@ -35,14 +35,14 @@ describe("Full flow test", function () {
             SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.cfManagerVestingFactory.address
         };
         await docker.backend.up(dockerEnv);
-        await db.clearDb();
+        // await db.clearDb();
     });
 
     afterEach(async function () {
-        await docker.backend.down();
     });
 
     after(async function () {
+        await docker.backend.down();
         await docker.hardhat.down();
         await docker.network.remove();
     });
