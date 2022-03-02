@@ -394,7 +394,7 @@ describe("Full flow test", function () {
         )
     });
 
-    it("Should create payout for some asset and allow users to claim funds", async function () {
+    it.only("Should create payout for some asset and allow users to claim funds", async function () {
         await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false})
 
         const alicesAddress = await testData.alice.getAddress()
