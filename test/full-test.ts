@@ -35,14 +35,14 @@ describe("Full flow test", function () {
             SNAPSHOT_DISTRIBUTOR_ADDRESS_0: testData.cfManagerVestingFactory.address
         };
         await docker.backend.up(dockerEnv);
-        // await db.clearDb();
+        await db.clearDb();
     });
 
     afterEach(async function () {
+        await docker.backend.down();
     });
 
     after(async function () {
-        await docker.backend.down();
         await docker.hardhat.down();
         await docker.network.remove();
     });
@@ -394,7 +394,7 @@ describe("Full flow test", function () {
         )
     });
 
-    it.only("Should create payout for some asset and allow users to claim funds", async function () {
+    it("Should create payout for some asset and allow users to claim funds", async function () {
         await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false})
 
         const alicesAddress = await testData.alice.getAddress()
@@ -443,16 +443,12 @@ describe("Full flow test", function () {
           payoutBlockNumber,
           ignoredAddresses
         )
-        console.log(`[${new Date().toISOString()}] created payout task: ${createPayoutResponse.task_id}`)
-
-        await new Promise(f => setTimeout(f, 5000))
 
         // wait for payout tree to be created
         let payout: PayoutResponse
         let maxRetries = 10
         do {
             await new Promise(f => setTimeout(f, 5000))
-            console.log(`[${new Date().toISOString()}] get payout task: ${createPayoutResponse.task_id}`)
             payout = await payoutService.getPayoutTaskById(
               issuerOwnerAccessToken,
               chainId,
