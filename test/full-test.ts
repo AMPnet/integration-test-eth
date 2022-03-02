@@ -388,7 +388,10 @@ describe("Full flow test", function () {
             expect(isWalletApproved).to.be.true
         }
         const numberOfTasks = Number((await db.countBlockchainTasks()).rows[0].count)
-        expect(numberOfTasks).to.be.below(5, "Too many blockchain tasks for whitelisting")
+        expect(numberOfTasks).to.be.below(
+          5,
+          `Too many blockchain tasks for whitelisting: ${numberOfTasks} should be < 5`
+        )
     });
 
     it("Should create payout for some asset and allow users to claim funds", async function () {
