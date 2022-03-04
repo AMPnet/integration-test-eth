@@ -15,6 +15,11 @@ services:
     ports:
       - "5432:5432"
 
+  wiremock:
+    image: wiremock/wiremock:2.32.0-1-alpine
+    volumes:
+      - ./wiremock:/home/wiremock
+
   identity-service:
     image: ampnet/identity-service:latest
     environment:
@@ -38,9 +43,9 @@ services:
       - "spring.mail.test-connection=false"
       - "management.health.mail.enabled=false"
     depends_on:
-       - db
+      - db
     ports:
-       - "8136:8136"
+      - "8136:8136"
 
   report-service:
    image: ampnet/report-service-eth:latest
@@ -65,5 +70,26 @@ services:
      - "com.ampnet.reportserviceeth.chain-goerli.cf-manager-factory-addresses[0]="
      - "com.ampnet.reportserviceeth.chain-goerli.cf-manager-factory-addresses[1]="
      - "com.ampnet.reportserviceeth.chain-goerli.snapshot-distributor-addresses[0]="
+   depends_on:
+     - db
    ports:
      - "8137:8137"
+
+  payout-service:
+    image: ampnet/payout-service:latest
+    environment:
+      - "server.port=8138"
+      - "spring.profiles.active=dev"
+      - "spring.datasource.url=jdbc:postgresql://db:5432/payout_service_eth"
+      - "spring.datasource.username=payout_service_eth"
+      - "spring.datasource.password=password"
+      - "payoutservice.payout.check-asset-owner=false"
+      - "payoutservice.ipfs.url=http://wiremock:8080"
+      - "payoutservice.ipfs.api-key=api-key"
+      - "payoutservice.ipfs.secret-api-key=secret-api-key"
+      - "INFURA_ID="
+    depends_on:
+      - db
+      - wiremock
+    ports:
+      - "8138:8138"

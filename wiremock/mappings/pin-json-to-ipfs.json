@@ -1,0 +1,17 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/pinning/pinJSONToIPFS"
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "jsonBody": {
+            "IpfsHash": "test-ipfs-hash",
+            "PinSize": 0,
+            "Timestamp": "2022-01-01T00:00:00Z"
+        }
+    }
+}

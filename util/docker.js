@@ -54,7 +54,7 @@ async function downHardhat() {
     await compose.down({
         cwd: dockerComposeLocation,
         composeOptions: ["-f", "docker-compose-hardhat.yml", "-p", "integration-test-eth-hardhat"],
-        commandOptions: ["-v"],
+        commandOptions: ["-v", "--rmi", "local"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (hardhat): ", err)
@@ -84,14 +84,15 @@ async function upBackend(dockerEnv) {
     })
     const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
     const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
-    await healthcheck([identityServiceChecker, reportServiceChecker])
+    const payoutServiceChecker = new HTTPChecker('Payout Service checker', 'http://localhost:8138/actuator/health')
+    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker])
 }
 
 async function downBackend() {
     await compose.down({
         cwd: dockerComposeLocation,
         composeOptions: ["-f", "docker-compose-backend.yml", "-p", "integration-test-eth-backend"],
-        commandOptions: ["-v"],
+        commandOptions: ["-v", "--rmi", "local"],
         log: true
     }).catch(err => {
         console.log("docker-compose down error (backend): ", err)
