@@ -12,10 +12,10 @@ export async function createPayout(
 ): Promise<CreatePayoutResponse> {
     try {
         const { data } = await axios.post<CreatePayoutResponse>(
-            `${baseUrl}/payouts/${chainId}/${assetAddress}/create`,
+            `${baseUrl}/payouts/${chainId}/${assetAddress}`,
             {
                 payout_block_number: payoutBlockNumber,
-                ignored_asset_addresses: ignoredAssetAddresses,
+                ignored_holder_addresses: ignoredAssetAddresses,
                 issuer_address: issuerAddress
             },
             {
@@ -172,7 +172,7 @@ export interface PayoutResponse {
 
     asset: string,
     total_asset_amount?: number,
-    ignored_asset_addresses: string[],
+    ignored_holder_addresses: string[],
 
     asset_snapshot_merkle_root?: string,
     asset_snapshot_merkle_depth?: number,

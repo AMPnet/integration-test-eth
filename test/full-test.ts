@@ -468,7 +468,7 @@ describe("Full flow test", function () {
           {
               asset: testData.asset.address,
               totalAssetAmount: payout.total_asset_amount,
-              ignoredAssetAddresses: payout.ignored_asset_addresses,
+              ignoredAssetAddresses: payout.ignored_holder_addresses,
               payoutInfo: testInfo,
               assetSnapshotMerkleRoot: payout.asset_snapshot_merkle_root,
               assetSnapshotMerkleDepth: payout.asset_snapshot_merkle_depth,
