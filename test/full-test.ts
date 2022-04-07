@@ -394,7 +394,7 @@ describe("Full flow test", function () {
         )
     });
 
-    it("Should create payout for some asset and allow users to claim funds", async function () {
+    it.only("Should create payout for some asset and allow users to claim funds", async function () {
         await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false})
 
         const alicesAddress = await testData.alice.getAddress()
@@ -465,7 +465,7 @@ describe("Full flow test", function () {
           {
               asset: testData.asset.address,
               totalAssetAmount: snapshot.total_asset_amount,
-              ignoredAssetAddresses: snapshot.ignored_holder_addresses,
+              ignoredHolderAddresses: snapshot.ignored_holder_addresses,
               payoutInfo: snapshot.name,
               assetSnapshotMerkleRoot: snapshot.asset_snapshot_merkle_root,
               assetSnapshotMerkleDepth: snapshot.asset_snapshot_merkle_depth,
@@ -484,7 +484,7 @@ describe("Full flow test", function () {
         expect(payoutInfo.isCanceled).to.be.equal(false)
         expect(payoutInfo.asset).to.be.equal(testData.asset.address)
         expect(payoutInfo.totalAssetAmount).to.be.equal(snapshot.total_asset_amount)
-        expect(payoutInfo.ignoredAssetAddresses).to.have.members(ignoredAddresses)
+        expect(payoutInfo.ignoredHolderAddresses).to.have.members(ignoredAddresses)
         expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(snapshot.asset_snapshot_merkle_root)
         expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(snapshot.asset_snapshot_merkle_depth)
         expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(snapshot.asset_snapshot_block_number)
