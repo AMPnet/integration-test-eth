@@ -2,21 +2,23 @@ import axios from "axios";
 
 const baseUrl = "http://localhost:8138"
 
-export async function createPayout(
+export async function createSnapshot(
   token: string,
+  name: string,
   chainId: number,
   assetAddress: string,
   payoutBlockNumber: number,
-  ignoredAssetAddresses: string[],
-  issuerAddress?: string
-): Promise<CreatePayoutResponse> {
+  ignoredAssetAddresses: string[]
+): Promise<CreateSnapshotResponse> {
     try {
-        const { data } = await axios.post<CreatePayoutResponse>(
-            `${baseUrl}/payouts/${chainId}/${assetAddress}`,
+        const { data } = await axios.post<CreateSnapshotResponse>(
+            `${baseUrl}/snapshots`,
             {
+                name: name,
+                chain_id: chainId,
+                asset_address: assetAddress,
                 payout_block_number: payoutBlockNumber,
-                ignored_holder_addresses: ignoredAssetAddresses,
-                issuer_address: issuerAddress
+                ignored_holder_addresses: ignoredAssetAddresses
             },
             {
                 headers: {
@@ -26,18 +28,17 @@ export async function createPayout(
         )
         return data
     } catch (error) {
-        console.log("createPayout error: ", error)
+        console.log("createSnapshot error: ", error)
     }
 }
 
-export async function getPayoutTaskById(
+export async function getSnapshotById(
   token: string,
-  chainId: number,
-  taskId: string
-): Promise<PayoutResponse> {
+  id: string
+): Promise<SnapshotResponse> {
     try {
-        const { data } = await axios.get<PayoutResponse>(
-            `${baseUrl}/payouts/${chainId}/task/${taskId}`,
+        const { data } = await axios.get<SnapshotResponse>(
+            `${baseUrl}/snapshots/${id}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -46,30 +47,21 @@ export async function getPayoutTaskById(
         )
         return data
     } catch (error) {
-        console.log("getPayoutTaskById error: ", error)
+        console.log("getSnapshotById error: ", error)
     }
 }
 
-export async function getPayouts(
+export async function getSnapshots(
   token: string,
-  chainId: number,
-  assetFactories: string[],
-  payoutService: string,
-  payoutManager: string,
-  issuer?: string,
-  owner?: string,
-  status?: PayoutStatus[]
-): Promise<AdminPayoutsResponse> {
+  chainId?: number,
+  status?: SnapshotStatus[]
+): Promise<SnapshotsResponse> {
     try {
-        const { data } = await axios.get<AdminPayoutsResponse>(
-            `${baseUrl}/payouts/${chainId}`,
+        const { data } = await axios.get<SnapshotsResponse>(
+            `${baseUrl}/snapshots`,
             {
                 params: {
-                    assetFactories: assetFactories.join(","),
-                    payoutService: payoutService,
-                    payoutManager: payoutManager,
-                    issuer: issuer,
-                    owner: owner,
+                    chainId: chainId,
                     status: status?.join(",")
                 },
                 headers: {
@@ -79,14 +71,13 @@ export async function getPayouts(
         )
         return data
     } catch (error) {
-        console.log("getPayouts error: ", error)
+        console.log("getSnapshots error: ", error)
     }
 }
 
 export async function getPayoutsForInvestor(
   token: string,
   chainId: number,
-  investorAddress: string,
   assetFactories: string[],
   payoutService: string,
   payoutManager: string,
@@ -94,9 +85,10 @@ export async function getPayoutsForInvestor(
 ): Promise<InvestorPayoutsResponse> {
     try {
         const { data } = await axios.get<InvestorPayoutsResponse>(
-            `${baseUrl}/payouts/${chainId}/investor/${investorAddress}`,
+            `${baseUrl}/claimable_payouts`,
             {
                 params: {
+                    chainId: chainId,
                     assetFactories: assetFactories.join(","),
                     payoutService: payoutService,
                     payoutManager: payoutManager,
@@ -154,52 +146,62 @@ export interface ErrorResponse {
     message: string
 }
 
-export interface CreatePayoutResponse {
-    task_id: string
+export interface CreateSnapshotResponse {
+    id: string
 }
 
-export type PayoutStatus = "PROOF_PENDING" | "PROOF_FAILED" | "PROOF_CREATED" | "PAYOUT_CREATED"
+export type SnapshotStatus = "PENDING" | "SUCCESS" | "FAILED"
 
-export interface PayoutResponse {
-    taskId?: string,
-    status: PayoutStatus,
-    issuer?: string,
-
-    payout_id?: string,
-    payout_owner: string,
-    payout_info?: string,
-    is_canceled?: boolean,
-
+export interface SnapshotResponse {
+    id: string,
+    name: string,
+    chain_id: number,
+    status: SnapshotStatus
+    owner: string,
     asset: string,
     total_asset_amount?: number,
     ignored_holder_addresses: string[],
-
     asset_snapshot_merkle_root?: string,
     asset_snapshot_merkle_depth?: number,
     asset_snapshot_block_number: string,
-    asset_snapshot_merkle_ipfs_hash: string,
-
-    reward_asset?: string,
-    total_reward_amount?: string,
-    remaining_reward_amount?: string
+    asset_snapshot_merkle_ipfs_hash: string
 }
 
-export interface AdminPayoutsResponse {
-    payouts: PayoutResponse[]
+export interface SnapshotsResponse {
+    snapshots: SnapshotResponse[]
+}
+
+export interface PayoutResponse {
+    payout_id: string,
+    payout_owner: string,
+    payout_info: string,
+    is_canceled: boolean,
+
+    asset: string,
+    total_asset_amount: string,
+    ignored_holder_addresses: string[],
+
+    asset_snapshot_merkle_root: string,
+    asset_snapshot_merkle_depth: number,
+    asset_snapshot_block_number: string,
+    asset_snapshot_merkle_ipfs_hash: string,
+
+    reward_asset: string,
+    total_reward_amount: string,
+    remaining_reward_amount: string
 }
 
 export interface InvestorPayoutResponse {
     payout: PayoutResponse,
     investor: string,
     amount_claimed: string,
-
-    amount_claimable?: string,
-    balance?: string,
-    proof?: string[]
+    amount_claimable: string,
+    balance: string,
+    proof: string[]
 }
 
 export interface InvestorPayoutsResponse {
-    payouts: InvestorPayoutResponse[]
+    claimable_payouts: InvestorPayoutResponse[]
 }
 
 export type Node = NilNode | LeafNode | PathNode
