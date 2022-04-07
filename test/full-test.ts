@@ -11,7 +11,7 @@ import * as payoutService from "../util/payout-service";
 import * as db from "../util/db";
 import {DockerEnv} from "../util/types";
 import {TestData} from "../tokenizer-prototype/test/TestData";
-import {InvestorPayoutsResponse, PayoutResponse} from "../util/payout-service";
+import {InvestorPayoutsResponse, SnapshotResponse} from "../util/payout-service";
 
 describe("Full flow test", function () {
 
@@ -425,19 +425,18 @@ describe("Full flow test", function () {
 
         // create token for deployer
         const issuerOwnerAddress = await testData.issuerOwner.getAddress()
-        const payload = await userService.getPayload(issuerOwnerAddress)
-        const issuerOwnerAccessToken = await userService.getAccessToken(
-          issuerOwnerAddress,
-          await testData.issuerOwner.signMessage(payload)
-        )
+        const issuerOwnerAccessToken = await getAccessToken(testData.issuerOwner as Signer)
 
         const ignoredAddresses = [issuerOwnerAddress, franksAddress, testData.cfManager.address]
 
         await setupWeb3jFilter()
 
+        const snapshotName = "snapshot-name"
+
         // request payout tree creation
-        const createPayoutResponse = await payoutService.createPayout(
+        const snapshotResponse = await payoutService.createSnapshot(
           issuerOwnerAccessToken,
+          snapshotName,
           chainId,
           testData.asset.address,
           payoutBlockNumber,
@@ -445,17 +444,16 @@ describe("Full flow test", function () {
         )
 
         // wait for payout tree to be created
-        let payout: PayoutResponse
+        let snapshot: SnapshotResponse
         let maxRetries = 10
         do {
             await new Promise(f => setTimeout(f, 5000))
-            payout = await payoutService.getPayoutTaskById(
+            snapshot = await payoutService.getSnapshotById(
               issuerOwnerAccessToken,
-              chainId,
-              createPayoutResponse.task_id
+              snapshotResponse.id
             )
             maxRetries -= 1
-        } while (payout.status != "PROOF_CREATED" && maxRetries > 0)
+        } while (snapshot.status != "SUCCESS" && maxRetries > 0)
 
         const rewardCoin = await helpers.deployStablecoin(testData.issuerOwner, "1000000000000", 18)
 
@@ -463,17 +461,16 @@ describe("Full flow test", function () {
         await rewardCoin.connect(testData.issuerOwner).approve(testData.payoutManager.address, rewardAmount)
 
         // create payout on blockchain
-        const testInfo = "test-info"
         await testData.payoutManager.connect(testData.issuerOwner).createPayout(
           {
               asset: testData.asset.address,
-              totalAssetAmount: payout.total_asset_amount,
-              ignoredAssetAddresses: payout.ignored_holder_addresses,
-              payoutInfo: testInfo,
-              assetSnapshotMerkleRoot: payout.asset_snapshot_merkle_root,
-              assetSnapshotMerkleDepth: payout.asset_snapshot_merkle_depth,
-              assetSnapshotBlockNumber: payout.asset_snapshot_block_number,
-              assetSnapshotMerkleIpfsHash: payout.asset_snapshot_merkle_ipfs_hash,
+              totalAssetAmount: snapshot.total_asset_amount,
+              ignoredHolderAddresses: snapshot.ignored_holder_addresses,
+              payoutInfo: snapshot.name,
+              assetSnapshotMerkleRoot: snapshot.asset_snapshot_merkle_root,
+              assetSnapshotMerkleDepth: snapshot.asset_snapshot_merkle_depth,
+              assetSnapshotBlockNumber: snapshot.asset_snapshot_block_number,
+              assetSnapshotMerkleIpfsHash: snapshot.asset_snapshot_merkle_ipfs_hash,
               rewardAsset: rewardCoin.address,
               totalRewardAmount: rewardAmount
           }
@@ -483,15 +480,15 @@ describe("Full flow test", function () {
         const payoutInfo = await testData.payoutManager.getPayoutInfo(0)
         expect(payoutInfo.payoutId).to.be.equal(0)
         expect(payoutInfo.payoutOwner).to.be.equal(issuerOwnerAddress)
-        expect(payoutInfo.payoutInfo).to.be.equal(testInfo)
+        expect(payoutInfo.payoutInfo).to.be.equal(snapshotName)
         expect(payoutInfo.isCanceled).to.be.equal(false)
         expect(payoutInfo.asset).to.be.equal(testData.asset.address)
-        expect(payoutInfo.totalAssetAmount).to.be.equal(payout.total_asset_amount)
-        expect(payoutInfo.ignoredAssetAddresses).to.have.members(ignoredAddresses)
-        expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(payout.asset_snapshot_merkle_root)
-        expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(payout.asset_snapshot_merkle_depth)
-        expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(payout.asset_snapshot_block_number)
-        expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(payout.asset_snapshot_merkle_ipfs_hash)
+        expect(payoutInfo.totalAssetAmount).to.be.equal(snapshot.total_asset_amount)
+        expect(payoutInfo.ignoredHolderAddresses).to.have.members(ignoredAddresses)
+        expect(payoutInfo.assetSnapshotMerkleRoot).to.be.equal(snapshot.asset_snapshot_merkle_root)
+        expect(payoutInfo.assetSnapshotMerkleDepth).to.be.equal(snapshot.asset_snapshot_merkle_depth)
+        expect(payoutInfo.assetSnapshotBlockNumber).to.be.equal(snapshot.asset_snapshot_block_number)
+        expect(payoutInfo.assetSnapshotMerkleIpfsHash).to.be.equal(snapshot.asset_snapshot_merkle_ipfs_hash)
         expect(payoutInfo.rewardAsset).to.be.equal(rewardCoin.address)
         expect(payoutInfo.totalRewardAmount).to.be.equal(rewardAmount)
         expect(payoutInfo.remainingRewardAmount).to.be.equal(rewardAmount)
@@ -503,76 +500,76 @@ describe("Full flow test", function () {
         ]
 
         // get path, claim funds for Alice and verify they are received
+        const alicesAccessToken = await getAccessToken(testData.alice as Signer)
         const alicesPayouts = await payoutService.getPayoutsForInvestor(
-          issuerOwnerAccessToken,
+          alicesAccessToken,
           chainId,
-          alicesAddress,
           assetFactories,
           testData.payoutService.address,
           testData.payoutManager.address,
           testData.issuer.address
         ) as InvestorPayoutsResponse
 
-        expect(alicesPayouts.payouts.length).to.be.equal(1)
+        expect(alicesPayouts.claimable_payouts.length).to.be.equal(1)
 
         await testData.payoutManager.connect(testData.alice).claim(
           payoutInfo.payoutId,
-          alicesPayouts.payouts[0].investor,
-          alicesPayouts.payouts[0].balance,
-          alicesPayouts.payouts[0].proof
+          alicesPayouts.claimable_payouts[0].investor,
+          alicesPayouts.claimable_payouts[0].balance,
+          alicesPayouts.claimable_payouts[0].proof
         )
 
         const alicesRewardBalance = await rewardCoin.balanceOf(alicesAddress)
         expect(alicesRewardBalance).to.be.equal(alicesInvestment.mul(2))
 
         // get path, claim funds for Jane and verify they are received
+        const janesAccessToken = await getAccessToken(testData.jane as Signer)
         const janesPayouts = await payoutService.getPayoutsForInvestor(
-          issuerOwnerAccessToken,
+          janesAccessToken,
           chainId,
-          janesAddress,
           assetFactories,
           testData.payoutService.address,
           testData.payoutManager.address,
           testData.issuer.address
         ) as InvestorPayoutsResponse
 
-        expect(janesPayouts.payouts.length).to.be.equal(1)
+        expect(janesPayouts.claimable_payouts.length).to.be.equal(1)
 
         await testData.payoutManager.connect(testData.jane).claim(
           payoutInfo.payoutId,
-          janesPayouts.payouts[0].investor,
-          janesPayouts.payouts[0].balance,
-          janesPayouts.payouts[0].proof
+          janesPayouts.claimable_payouts[0].investor,
+          janesPayouts.claimable_payouts[0].balance,
+          janesPayouts.claimable_payouts[0].proof
         )
 
         const janesRewardBalance = await rewardCoin.balanceOf(janesAddress)
         expect(janesRewardBalance).to.be.equal(janesInvestment.mul(2))
 
         // Frank's address was ignored while creating payout
+        const franksAccessToken = await getAccessToken(testData.frank as Signer)
         const franksPayouts = await payoutService.getPayoutsForInvestor(
-          issuerOwnerAccessToken,
+          franksAccessToken,
           chainId,
-          franksAddress,
           assetFactories,
           testData.payoutService.address,
           testData.payoutManager.address,
           testData.issuer.address
         ) as InvestorPayoutsResponse
 
-        expect(franksPayouts.payouts.length).to.be.equal(0)
+        expect(franksPayouts.claimable_payouts.length).to.be.equal(0)
 
         // Mark got funds after payout was created, address is not included in payout
+        const marksAccessToken = await getAccessToken(testData.mark as Signer)
         const marksPayouts = await payoutService.getPayoutsForInvestor(
-          issuerOwnerAccessToken,
+          marksAccessToken,
           chainId,
-          marksAddress,
           assetFactories,
           testData.payoutService.address,
           testData.payoutManager.address,
           testData.issuer.address
         ) as InvestorPayoutsResponse
 
-        expect(marksPayouts.payouts.length).to.be.equal(0)
+        expect(marksPayouts.claimable_payouts.length).to.be.equal(0)
     });
 
     async function setupWeb3jFilter() {
@@ -600,6 +597,15 @@ describe("Full flow test", function () {
           userAccessToken,
           testData.issuer.address,
           await user.getChainId()
+        )
+    }
+
+    async function getAccessToken(signer: Signer) {
+        const address = await signer.getAddress()
+        const payload = await userService.getPayload(address)
+        return await userService.getAccessToken(
+          address,
+          await signer.signMessage(payload)
         )
     }
 })
