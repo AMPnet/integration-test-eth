@@ -46,6 +46,8 @@ services:
       - db
     ports:
       - "8136:8136"
+    volumes:
+      - ./logs:/var/log
 
   report-service:
    image: ampnet/report-service-eth:latest
@@ -74,6 +76,8 @@ services:
      - db
    ports:
      - "8137:8137"
+   volumes:
+     - ./logs:/var/log
 
   payout-service:
     image: ampnet/payout-service:latest
@@ -93,3 +97,21 @@ services:
       - wiremock
     ports:
       - "8138:8138"
+    volumes:
+      - ./logs:/var/log
+
+  blockchain-api-service:
+    image: ampnet/blockchain-api-service:latest
+    environment:
+      - "server.port=8139"
+      - "spring.profiles.active=dev"
+      - "spring.datasource.url=jdbc:postgresql://db:5432/blockchain_api_service_eth"
+      - "spring.datasource.username=blockchain_api_service_eth"
+      - "spring.datasource.password=password"
+      - "INFURA_ID="
+    depends_on:
+      - db
+    ports:
+      - "8139:8139"
+    volumes:
+      - ./logs:/var/log

@@ -131,3 +131,6 @@ artifacts
 
 # WireMock files
 wiremock/__files/*
+
+# Log files
+logs/*
