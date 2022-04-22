@@ -578,8 +578,9 @@ describe("Full flow test", function () {
         // insert client info into database
         const clientId = "test-client-id";
         const chainId = await testData.frank.getChainId();
-        const redirectUrlBase = "https://example.com";
-        await db.insertClientInfo(clientId, chainId, redirectUrlBase);
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        await db.insertClientInfo(clientId, chainId, redirectUrl);
 
         // create send request
         const recipientAddress = (await testData.alice.getAddress()).toLocaleLowerCase();
@@ -613,7 +614,7 @@ describe("Full flow test", function () {
         expect(fetchedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(fetchedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(fetchedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(fetchedSendRequest.send_tx.tx_hash).to.be.null;
         expect(fetchedSendRequest.send_tx.from).to.be.null;
         expect(fetchedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -647,7 +648,7 @@ describe("Full flow test", function () {
         expect(successfulSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(successfulSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(successfulSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(successfulSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(successfulSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(successfulSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(successfulSendRequest.send_tx.from).to.be.equal(senderAddress);
         expect(successfulSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -661,7 +662,8 @@ describe("Full flow test", function () {
 
     it("Should create send request with chainId and redirectUrl and correctly send funds (✅)", async function () {
         const chainId = await testData.frank.getChainId();
-        const redirectUrlBase = "https://example.com";
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
 
         // create send request
         const recipientAddress = (await testData.alice.getAddress()).toLocaleLowerCase();
@@ -669,7 +671,7 @@ describe("Full flow test", function () {
         const amount = "1000";
         const request: CreateSendRequest = {
             chain_id: chainId,
-            redirect_url: redirectUrlBase,
+            redirect_url: redirectUrl,
             token_address: tokenAddress,
             amount: amount,
             recipient_address: recipientAddress,
@@ -696,7 +698,7 @@ describe("Full flow test", function () {
         expect(fetchedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(fetchedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(fetchedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(fetchedSendRequest.send_tx.tx_hash).to.be.null;
         expect(fetchedSendRequest.send_tx.from).to.be.null;
         expect(fetchedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -730,7 +732,7 @@ describe("Full flow test", function () {
         expect(successfulSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(successfulSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(successfulSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(successfulSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(successfulSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(successfulSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(successfulSendRequest.send_tx.from).to.be.equal(senderAddress);
         expect(successfulSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -746,8 +748,9 @@ describe("Full flow test", function () {
         // insert client info into database
         const clientId = "test-client-id";
         const chainId = await testData.frank.getChainId();
-        const redirectUrlBase = "https://example.com";
-        await db.insertClientInfo(clientId, chainId, redirectUrlBase);
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        await db.insertClientInfo(clientId, chainId, redirectUrl);
 
         // create send request
         const recipientAddress = (await testData.alice.getAddress()).toLocaleLowerCase();
@@ -781,7 +784,7 @@ describe("Full flow test", function () {
         expect(fetchedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(fetchedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(fetchedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(fetchedSendRequest.send_tx.tx_hash).to.be.null;
         expect(fetchedSendRequest.send_tx.from).to.be.null;
         expect(fetchedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -814,7 +817,7 @@ describe("Full flow test", function () {
         expect(failedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(failedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(failedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(failedSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(failedSendRequest.send_tx.from).to.be.equal(senderAddress);
         expect(failedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -826,8 +829,9 @@ describe("Full flow test", function () {
         // insert client info into database
         const clientId = "test-client-id";
         const chainId = await testData.frank.getChainId();
-        const redirectUrlBase = "https://example.com";
-        await db.insertClientInfo(clientId, chainId, redirectUrlBase);
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        await db.insertClientInfo(clientId, chainId, redirectUrl);
 
         // create send request
         const recipientAddress = (await testData.alice.getAddress()).toLocaleLowerCase();
@@ -861,7 +865,7 @@ describe("Full flow test", function () {
         expect(fetchedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(fetchedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(fetchedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(fetchedSendRequest.send_tx.tx_hash).to.be.null;
         expect(fetchedSendRequest.send_tx.from).to.be.null;
         expect(fetchedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -895,7 +899,7 @@ describe("Full flow test", function () {
         expect(failedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(failedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(failedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(failedSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(failedSendRequest.send_tx.from).to.be.equal(senderAddress);
         expect(failedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -907,8 +911,9 @@ describe("Full flow test", function () {
         // insert client info into database
         const clientId = "test-client-id";
         const chainId = await testData.frank.getChainId();
-        const redirectUrlBase = "https://example.com";
-        await db.insertClientInfo(clientId, chainId, redirectUrlBase);
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        await db.insertClientInfo(clientId, chainId, redirectUrl);
 
         const sender = testData.frank;
         const senderAddress = (await sender.getAddress()).toLowerCase();
@@ -946,7 +951,7 @@ describe("Full flow test", function () {
         expect(fetchedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(fetchedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(fetchedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(fetchedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(fetchedSendRequest.send_tx.tx_hash).to.be.null;
         expect(fetchedSendRequest.send_tx.from).to.be.null;
         expect(fetchedSendRequest.send_tx.to).to.be.equal(tokenAddress);
@@ -980,7 +985,7 @@ describe("Full flow test", function () {
         expect(failedSendRequest.recipient_address).to.be.equal(recipientAddress);
         expect(failedSendRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
         expect(failedSendRequest.screen_config).to.be.deep.equal(request.screen_config);
-        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + `/send/${sendRequest.id}`);
+        expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(failedSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(failedSendRequest.send_tx.from).to.be.equal(otherSenderAddress);
         expect(failedSendRequest.send_tx.to).to.be.equal(tokenAddress);
