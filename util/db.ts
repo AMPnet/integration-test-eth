@@ -18,6 +18,16 @@ const reportDb = require('knex')({
         database: 'report_service_eth',
     }
 })
+const blockchainApiDb = require('knex')({
+    client: 'pg',
+    connection: {
+        host: 'localhost',
+        user: 'postgres',
+        password: 'postgres',
+        port: '5432',
+        database: 'blockchain_api_service_eth',
+    }
+})
 
 export async function clearDb() {
     return new Promise<void>(async resolve => {
@@ -32,6 +42,7 @@ export async function clearDb() {
         await identityDb.raw('TRUNCATE TABLE auto_invest_transaction;')
         await reportDb.raw('TRUNCATE TABLE event;')
         await reportDb.raw('TRUNCATE TABLE task;')
+        await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.client_info;')
         resolve()
     })
 }
@@ -42,4 +53,11 @@ export async function countBlockchainTasks(): Promise<any> {
 
 export async function countAutoInvestTasks(): Promise<any> {
     return identityDb.raw('SELECT COUNT(*) FROM auto_invest_task;')
+}
+
+export async function insertClientInfo(clientId: string, chainId: number, redirectUrl: string): Promise<any> {
+    return blockchainApiDb.raw(
+      `INSERT INTO blockchain_api_service.client_info(client_id, chain_id, redirect_url)
+       VALUES ('${clientId}', ${chainId}, '${redirectUrl}');`
+    )
 }
