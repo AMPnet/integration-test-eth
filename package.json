@@ -23,7 +23,7 @@
     "docker-compose": "^0.23.17",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.6.2",
-    "hardhat": "^2.9.2",
+    "hardhat": "^2.9.3",
     "knex": "^2.0.0",
     "pg": "^8.7.3",
     "ts-node": "^10.7.0",
