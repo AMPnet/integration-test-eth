@@ -35,7 +35,7 @@ export interface CreateSendRequest {
     client_id?: string
     chain_id?: number
     redirect_url?: string
-    token_address: string
+    token_address?: string
     amount: string
     sender_address?: string
     recipient_address: string

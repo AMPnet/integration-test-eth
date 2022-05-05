@@ -85,8 +85,7 @@ async function upBackend(dockerEnv) {
     const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
     const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
     const payoutServiceChecker = new HTTPChecker('Payout Service checker', 'http://localhost:8138/actuator/health')
-    const blockchainApiServiceChecker = new HTTPChecker('Blockchain API Service checker', 'http://localhost:8139/actuator/health')
-    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker, blockchainApiServiceChecker])
+    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker])
 }
 
 async function downBackend() {
@@ -103,6 +102,36 @@ async function downBackend() {
 const backend = {
     up: upBackend,
     down: downBackend
+}
+
+async function upBlockchainApi() {
+    await compose.upAll({
+        cwd: dockerComposeLocation,
+        log: true,
+        composeOptions: ["-f", "docker-compose-blockchain-api.yml", "-p", "integration-test-eth-blockchain-api"],
+        commandOptions: ["--build"],
+        env: {...process.env}
+    }).catch(err => {
+        console.log("docker-compose up error (backend): ", err)
+    })
+    const blockchainApiServiceChecker = new HTTPChecker('Blockchain API Service checker', 'http://localhost:8139/actuator/health')
+    await healthcheck([blockchainApiServiceChecker])
+}
+
+async function downBlockchainApi() {
+    await compose.down({
+        cwd: dockerComposeLocation,
+        composeOptions: ["-f", "docker-compose-blockchain-api.yml", "-p", "integration-test-eth-blockchain-api"],
+        commandOptions: ["-v", "--rmi", "local"],
+        log: true
+    }).catch(err => {
+        console.log("docker-compose down error (backend): ", err)
+    })
+}
+
+const blockchainApi = {
+    up: upBlockchainApi,
+    down: downBlockchainApi
 }
 
 async function showLogs(services) {
@@ -129,5 +158,5 @@ async function healthcheck(checkers) {
 }
 
 module.exports = {
-    hardhat, backend, network, showLogs
+    hardhat, backend, blockchainApi, network, showLogs
 }

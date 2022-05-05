@@ -1,0 +1,32 @@
+version: '3'
+
+networks:
+  default:
+    external: true
+    name: integration-test-eth
+
+services:
+  db:
+    build:
+      context: ./db
+    image: integration-db-eth
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+
+  blockchain-api-service:
+    image: ampnet/blockchain-api-service:latest
+    environment:
+      - "server.port=8139"
+      - "spring.profiles.active=dev"
+      - "spring.datasource.url=jdbc:postgresql://db:5432/blockchain_api_service_eth"
+      - "spring.datasource.username=blockchain_api_service_eth"
+      - "spring.datasource.password=password"
+      - "INFURA_ID="
+    depends_on:
+      - db
+    ports:
+      - "8139:8139"
+    volumes:
+      - ./logs:/var/log
