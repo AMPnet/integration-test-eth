@@ -1,14 +1,12 @@
 // @ts-ignore
 import {ethers} from "hardhat";
-import {Signer} from "ethers";
 import {expect} from "chai";
-import * as helpers from "../tokenizer-prototype/util/helpers";
 import {after, it} from "mocha";
 import * as docker from "../util/docker";
 import * as blockchainApiService from "../util/blockchain-api-service";
 import * as db from "../util/db";
 import {TestData} from "../tokenizer-prototype/test/TestData";
-import {CreateSendRequest} from "../util/blockchain-api-service";
+import {CreateBalanceCheckRequest, CreateSendRequest} from "../util/blockchain-api-service";
 
 describe("Blockchain API Service test", function () {
 
@@ -33,6 +31,309 @@ describe("Blockchain API Service test", function () {
     after(async function () {
         await docker.hardhat.down();
         await docker.network.remove();
+    });
+
+    it("Should create balance check request with clientId and correctly sign the message (✅)", async function () {
+        // insert client info into database
+        const clientId = "test-client-id";
+        const chainId = await testData.frank.getChainId();
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        const tokenAddress = testData.stablecoin.address.toLowerCase();
+        await db.insertClientInfo(clientId, {
+            chainId: chainId,
+            tokenAddress: tokenAddress,
+            balanceRedirectUrl: redirectUrl
+        });
+
+        // create balance check request
+        const signer = testData.alice;
+        const walletAddress = (await signer.getAddress()).toLocaleLowerCase();
+        const amount = "10000";
+        await testData.stablecoin.transfer(walletAddress, amount);
+        const request: CreateBalanceCheckRequest = {
+            client_id: clientId,
+            wallet_address: walletAddress,
+            arbitrary_data: {
+                test_data: true
+            },
+            screen_config: {
+                title: "title",
+                message: "message",
+                logo: "logo"
+            }
+        }
+        const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
+
+        // fetch created balance check request
+        const fetchedBalanceCheckRequest = await blockchainApiService.getBalanceCheckRequestById(balanceCheckRequest.id);
+
+        expect(fetchedBalanceCheckRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.status).to.be.equal("PENDING");
+        expect(fetchedBalanceCheckRequest.chain_id).to.be.equal(chainId);
+        expect(fetchedBalanceCheckRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.token_address).to.be.equal(tokenAddress);
+        expect(fetchedBalanceCheckRequest.block_number).to.be.null;
+        expect(fetchedBalanceCheckRequest.wallet_address).to.be.equal(walletAddress);
+        expect(fetchedBalanceCheckRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(fetchedBalanceCheckRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(fetchedBalanceCheckRequest.balance).to.be.null;
+        expect(fetchedBalanceCheckRequest.message_to_sign).to.not.be.null;
+        expect(fetchedBalanceCheckRequest.signed_message).to.be.null;
+
+        // sign message
+        const signedMessage = await signer.signMessage(fetchedBalanceCheckRequest.message_to_sign);
+
+        // attach wallet address and signed message
+        await blockchainApiService.attachWalletAddressAndSignedMessage(
+          fetchedBalanceCheckRequest.id,
+          walletAddress,
+          signedMessage
+        );
+
+        // fetch balance check request and check if it is successful
+        const successfulRequest = await blockchainApiService.getBalanceCheckRequestById(fetchedBalanceCheckRequest.id);
+
+        expect(successfulRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(successfulRequest.status).to.be.equal("SUCCESS");
+        expect(successfulRequest.chain_id).to.be.equal(chainId);
+        expect(successfulRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(successfulRequest.token_address).to.be.equal(tokenAddress);
+        expect(successfulRequest.block_number).to.be.null;
+        expect(successfulRequest.wallet_address).to.be.equal(walletAddress);
+        expect(successfulRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(successfulRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(successfulRequest.balance.wallet).to.be.equal(walletAddress);
+        expect(successfulRequest.balance.amount).to.be.equal(amount);
+        expect(successfulRequest.message_to_sign).to.not.be.null;
+        expect(successfulRequest.signed_message).to.be.equal(signedMessage.toLowerCase());
+    });
+
+    it("Should create balance check request with chainId, redirectUrl and tokenAddress and correctly sign the message (✅)", async function () {
+        // insert client info into database
+        const chainId = await testData.frank.getChainId();
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        const tokenAddress = testData.stablecoin.address.toLowerCase();
+
+        // create balance check request
+        const signer = testData.alice;
+        const walletAddress = (await signer.getAddress()).toLocaleLowerCase();
+        const amount = "10000";
+        await testData.stablecoin.transfer(walletAddress, amount);
+        const request: CreateBalanceCheckRequest = {
+            chain_id: chainId,
+            redirect_url: redirectUrl,
+            token_address: tokenAddress,
+            wallet_address: walletAddress,
+            arbitrary_data: {
+                test_data: true
+            },
+            screen_config: {
+                title: "title",
+                message: "message",
+                logo: "logo"
+            }
+        }
+        const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
+
+        // fetch created balance check request
+        const fetchedBalanceCheckRequest = await blockchainApiService.getBalanceCheckRequestById(balanceCheckRequest.id);
+
+        expect(fetchedBalanceCheckRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.status).to.be.equal("PENDING");
+        expect(fetchedBalanceCheckRequest.chain_id).to.be.equal(chainId);
+        expect(fetchedBalanceCheckRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.token_address).to.be.equal(tokenAddress);
+        expect(fetchedBalanceCheckRequest.block_number).to.be.null;
+        expect(fetchedBalanceCheckRequest.wallet_address).to.be.equal(walletAddress);
+        expect(fetchedBalanceCheckRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(fetchedBalanceCheckRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(fetchedBalanceCheckRequest.balance).to.be.null;
+        expect(fetchedBalanceCheckRequest.message_to_sign).to.not.be.null;
+        expect(fetchedBalanceCheckRequest.signed_message).to.be.null;
+
+        // sign message
+        const signedMessage = await signer.signMessage(fetchedBalanceCheckRequest.message_to_sign);
+
+        // attach wallet address and signed message
+        await blockchainApiService.attachWalletAddressAndSignedMessage(
+          fetchedBalanceCheckRequest.id,
+          walletAddress,
+          signedMessage
+        );
+
+        // fetch balance check request and check if it is successful
+        const successfulRequest = await blockchainApiService.getBalanceCheckRequestById(fetchedBalanceCheckRequest.id);
+
+        expect(successfulRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(successfulRequest.status).to.be.equal("SUCCESS");
+        expect(successfulRequest.chain_id).to.be.equal(chainId);
+        expect(successfulRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(successfulRequest.token_address).to.be.equal(tokenAddress);
+        expect(successfulRequest.block_number).to.be.null;
+        expect(successfulRequest.wallet_address).to.be.equal(walletAddress);
+        expect(successfulRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(successfulRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(successfulRequest.balance.wallet).to.be.equal(walletAddress);
+        expect(successfulRequest.balance.amount).to.be.equal(amount);
+        expect(successfulRequest.message_to_sign).to.not.be.null;
+        expect(successfulRequest.signed_message).to.be.equal(signedMessage.toLowerCase());
+    });
+
+    it("Should create balance check request with clientId and submit wrong signature (❌)", async function () {
+        // insert client info into database
+        const clientId = "test-client-id";
+        const chainId = await testData.frank.getChainId();
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        const tokenAddress = testData.stablecoin.address.toLowerCase();
+        await db.insertClientInfo(clientId, {
+            chainId: chainId,
+            tokenAddress: tokenAddress,
+            balanceRedirectUrl: redirectUrl
+        });
+
+        // create balance check request
+        const signer = testData.alice;
+        const walletAddress = (await signer.getAddress()).toLocaleLowerCase();
+        const amount = "10000";
+        await testData.stablecoin.transfer(walletAddress, amount);
+        const request: CreateBalanceCheckRequest = {
+            client_id: clientId,
+            wallet_address: walletAddress,
+            arbitrary_data: {
+                test_data: true
+            },
+            screen_config: {
+                title: "title",
+                message: "message",
+                logo: "logo"
+            }
+        }
+        const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
+
+        // fetch created balance check request
+        const fetchedBalanceCheckRequest = await blockchainApiService.getBalanceCheckRequestById(balanceCheckRequest.id);
+
+        expect(fetchedBalanceCheckRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.status).to.be.equal("PENDING");
+        expect(fetchedBalanceCheckRequest.chain_id).to.be.equal(chainId);
+        expect(fetchedBalanceCheckRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.token_address).to.be.equal(tokenAddress);
+        expect(fetchedBalanceCheckRequest.block_number).to.be.null;
+        expect(fetchedBalanceCheckRequest.wallet_address).to.be.equal(walletAddress);
+        expect(fetchedBalanceCheckRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(fetchedBalanceCheckRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(fetchedBalanceCheckRequest.balance).to.be.null;
+        expect(fetchedBalanceCheckRequest.message_to_sign).to.not.be.null;
+        expect(fetchedBalanceCheckRequest.signed_message).to.be.null;
+
+        // sign message incorrectly
+        const signedMessage = "0xabcdef";
+
+        // attach wallet address and signed message
+        await blockchainApiService.attachWalletAddressAndSignedMessage(
+          fetchedBalanceCheckRequest.id,
+          walletAddress,
+          signedMessage
+        );
+
+        // fetch balance check request and check if it is successful
+        const successfulRequest = await blockchainApiService.getBalanceCheckRequestById(fetchedBalanceCheckRequest.id);
+
+        expect(successfulRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(successfulRequest.status).to.be.equal("FAILED");
+        expect(successfulRequest.chain_id).to.be.equal(chainId);
+        expect(successfulRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(successfulRequest.token_address).to.be.equal(tokenAddress);
+        expect(successfulRequest.block_number).to.be.null;
+        expect(successfulRequest.wallet_address).to.be.equal(walletAddress);
+        expect(successfulRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(successfulRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(successfulRequest.balance.wallet).to.be.equal(walletAddress);
+        expect(successfulRequest.balance.amount).to.be.equal(amount);
+        expect(successfulRequest.message_to_sign).to.not.be.null;
+        expect(successfulRequest.signed_message).to.be.equal(signedMessage.toLowerCase());
+    });
+
+    it("Should create balance check request with clientId and sign request from wrong wallet (❌)", async function () {
+        // insert client info into database
+        const clientId = "test-client-id";
+        const chainId = await testData.frank.getChainId();
+        const redirectUrlBase = "https://example.com/";
+        const redirectUrl = redirectUrlBase + "${id}";
+        const tokenAddress = testData.stablecoin.address.toLowerCase();
+        await db.insertClientInfo(clientId, {
+            chainId: chainId,
+            tokenAddress: tokenAddress,
+            balanceRedirectUrl: redirectUrl
+        });
+
+        // create balance check request
+        const walletAddress = (await testData.alice.getAddress()).toLocaleLowerCase();
+        const amount = "10000";
+        await testData.stablecoin.transfer(walletAddress, amount);
+        const request: CreateBalanceCheckRequest = {
+            client_id: clientId,
+            wallet_address: walletAddress,
+            arbitrary_data: {
+                test_data: true
+            },
+            screen_config: {
+                title: "title",
+                message: "message",
+                logo: "logo"
+            }
+        }
+        const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
+
+        // fetch created balance check request
+        const fetchedBalanceCheckRequest = await blockchainApiService.getBalanceCheckRequestById(balanceCheckRequest.id);
+
+        expect(fetchedBalanceCheckRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.status).to.be.equal("PENDING");
+        expect(fetchedBalanceCheckRequest.chain_id).to.be.equal(chainId);
+        expect(fetchedBalanceCheckRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(fetchedBalanceCheckRequest.token_address).to.be.equal(tokenAddress);
+        expect(fetchedBalanceCheckRequest.block_number).to.be.null;
+        expect(fetchedBalanceCheckRequest.wallet_address).to.be.equal(walletAddress);
+        expect(fetchedBalanceCheckRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(fetchedBalanceCheckRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(fetchedBalanceCheckRequest.balance).to.be.null;
+        expect(fetchedBalanceCheckRequest.message_to_sign).to.not.be.null;
+        expect(fetchedBalanceCheckRequest.signed_message).to.be.null;
+
+        // sign message
+        const signer = testData.frank;
+        const otherWalletAddress = (await signer.getAddress()).toLocaleLowerCase();
+        const otherAmount = "20000";
+        await testData.stablecoin.transfer(otherWalletAddress, otherAmount);
+        const signedMessage = await signer.signMessage(fetchedBalanceCheckRequest.message_to_sign);
+
+        // attach wallet address and signed message
+        await blockchainApiService.attachWalletAddressAndSignedMessage(
+          fetchedBalanceCheckRequest.id,
+          otherWalletAddress,
+          signedMessage
+        );
+
+        // fetch balance check request and check if it is successful
+        const successfulRequest = await blockchainApiService.getBalanceCheckRequestById(fetchedBalanceCheckRequest.id);
+
+        expect(successfulRequest.id).to.be.equal(balanceCheckRequest.id);
+        expect(successfulRequest.status).to.be.equal("FAILED");
+        expect(successfulRequest.chain_id).to.be.equal(chainId);
+        expect(successfulRequest.redirect_url).to.be.equal(redirectUrlBase + balanceCheckRequest.id);
+        expect(successfulRequest.token_address).to.be.equal(tokenAddress);
+        expect(successfulRequest.block_number).to.be.null;
+        expect(successfulRequest.wallet_address).to.be.equal(walletAddress);
+        expect(successfulRequest.arbitrary_data).to.be.deep.equal(request.arbitrary_data);
+        expect(successfulRequest.screen_config).to.be.deep.equal(request.screen_config);
+        expect(successfulRequest.balance.wallet).to.be.equal(otherWalletAddress);
+        expect(successfulRequest.balance.amount).to.be.equal(otherAmount);
+        expect(successfulRequest.message_to_sign).to.not.be.null;
+        expect(successfulRequest.signed_message).to.be.equal(signedMessage.toLowerCase());
     });
 
     it("Should create send request with clientId and correctly send funds (✅)", async function () {

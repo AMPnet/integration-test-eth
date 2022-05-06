@@ -3,7 +3,8 @@ let path = require('path')
 let compose = require('docker-compose')
 let Healthcheck = require('@danielwpz/health-check')
 let HTTPChecker = Healthcheck.HTTPChecker
-let shell = require('child_process').exec
+const util = require('util')
+let shell = util.promisify(require('child_process').exec)
 
 const dockerComposeLocation = path.join(__dirname, '..')
 
@@ -13,15 +14,14 @@ const maxNumberOfChecks = 30       // maximum of 30 checks after giving up which
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
 async function shellCommand(command) {
-    await shell(command, function (error, stdout, stderr) {
-        console.log(`exec command: ${command}`)
-        console.log(stdout)
-        console.error(stderr)
+    console.log(`exec command: ${command}`)
+    const { stdout, stderr } = await shell(command);
 
-        if (error !== null) {
-            console.error(`exec error: ${error}`);
-        }
-    })
+    console.log(`command [${command}] result: ${stdout}`)
+
+    if (stderr) {
+        console.error(`exec error [${command}]: ${stderr}`);
+    }
 }
 
 async function createNetwork() {
