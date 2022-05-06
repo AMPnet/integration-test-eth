@@ -42,7 +42,15 @@ export async function clearDb() {
         await identityDb.raw('TRUNCATE TABLE auto_invest_transaction;')
         await reportDb.raw('TRUNCATE TABLE event;')
         await reportDb.raw('TRUNCATE TABLE task;')
+        resolve()
+    })
+}
+
+export async function clearBlockchainApiDb() {
+    return new Promise<void>(async resolve => {
         await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.client_info;')
+        await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.send_erc20_request;')
+        await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.erc20_balance_request;')
         resolve()
     })
 }
@@ -55,9 +63,22 @@ export async function countAutoInvestTasks(): Promise<any> {
     return identityDb.raw('SELECT COUNT(*) FROM auto_invest_task;')
 }
 
-export async function insertClientInfo(clientId: string, chainId: number, redirectUrl: string): Promise<any> {
+export async function insertClientInfo(
+  clientId: string,
+  info: {
+      chainId: number,
+      tokenAddress: string,
+      sendRedirectUrl?: string,
+      balanceRedirectUrl?: string
+  }
+): Promise<any> {
     return blockchainApiDb.raw(
-      `INSERT INTO blockchain_api_service.client_info(client_id, chain_id, redirect_url)
-       VALUES ('${clientId}', ${chainId}, '${redirectUrl}');`
+      `INSERT INTO blockchain_api_service.client_info(
+           client_id, chain_id, token_address, send_redirect_url, balance_redirect_url
+       )
+       VALUES (
+           '${clientId}', ${info.chainId}, '${info.tokenAddress}', '${info.sendRedirectUrl ?? ""}',
+           '${info.balanceRedirectUrl ?? ""}'
+       );`
     )
 }

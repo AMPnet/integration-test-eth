@@ -3,7 +3,8 @@ let path = require('path')
 let compose = require('docker-compose')
 let Healthcheck = require('@danielwpz/health-check')
 let HTTPChecker = Healthcheck.HTTPChecker
-let shell = require('child_process').exec
+const util = require('util')
+let shell = util.promisify(require('child_process').exec)
 
 const dockerComposeLocation = path.join(__dirname, '..')
 
@@ -13,15 +14,14 @@ const maxNumberOfChecks = 30       // maximum of 30 checks after giving up which
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 
 async function shellCommand(command) {
-    await shell(command, function (error, stdout, stderr) {
-        console.log(`exec command: ${command}`)
-        console.log(stdout)
-        console.error(stderr)
+    console.log(`exec command: ${command}`)
+    const { stdout, stderr } = await shell(command);
 
-        if (error !== null) {
-            console.error(`exec error: ${error}`);
-        }
-    })
+    console.log(`command [${command}] result: ${stdout}`)
+
+    if (stderr) {
+        console.error(`exec error [${command}]: ${stderr}`);
+    }
 }
 
 async function createNetwork() {
@@ -85,8 +85,7 @@ async function upBackend(dockerEnv) {
     const identityServiceChecker = new HTTPChecker('Identity Service checker', 'http://localhost:8136/actuator/health')
     const reportServiceChecker = new HTTPChecker('Report Service checker', 'http://localhost:8137/actuator/health')
     const payoutServiceChecker = new HTTPChecker('Payout Service checker', 'http://localhost:8138/actuator/health')
-    const blockchainApiServiceChecker = new HTTPChecker('Blockchain API Service checker', 'http://localhost:8139/actuator/health')
-    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker, blockchainApiServiceChecker])
+    await healthcheck([identityServiceChecker, reportServiceChecker, payoutServiceChecker])
 }
 
 async function downBackend() {
@@ -103,6 +102,36 @@ async function downBackend() {
 const backend = {
     up: upBackend,
     down: downBackend
+}
+
+async function upBlockchainApi() {
+    await compose.upAll({
+        cwd: dockerComposeLocation,
+        log: true,
+        composeOptions: ["-f", "docker-compose-blockchain-api.yml", "-p", "integration-test-eth-blockchain-api"],
+        commandOptions: ["--build"],
+        env: {...process.env}
+    }).catch(err => {
+        console.log("docker-compose up error (backend): ", err)
+    })
+    const blockchainApiServiceChecker = new HTTPChecker('Blockchain API Service checker', 'http://localhost:8139/actuator/health')
+    await healthcheck([blockchainApiServiceChecker])
+}
+
+async function downBlockchainApi() {
+    await compose.down({
+        cwd: dockerComposeLocation,
+        composeOptions: ["-f", "docker-compose-blockchain-api.yml", "-p", "integration-test-eth-blockchain-api"],
+        commandOptions: ["-v", "--rmi", "local"],
+        log: true
+    }).catch(err => {
+        console.log("docker-compose down error (backend): ", err)
+    })
+}
+
+const blockchainApi = {
+    up: upBlockchainApi,
+    down: downBlockchainApi
 }
 
 async function showLogs(services) {
@@ -129,5 +158,5 @@ async function healthcheck(checkers) {
 }
 
 module.exports = {
-    hardhat, backend, network, showLogs
+    hardhat, backend, blockchainApi, network, showLogs
 }
