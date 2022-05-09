@@ -12,10 +12,12 @@ import * as db from "../util/db";
 import {DockerEnv} from "../util/types";
 import {TestData} from "../tokenizer-prototype/test/TestData";
 import {InvestorPayoutsResponse, SnapshotResponse} from "../util/payout-service";
+import {providers} from "ethers";
 
 describe("Full flow test", function () {
 
     let testData!: TestData
+    let web3Provider!: providers.JsonRpcProvider
 
     before(async function () {
         await docker.network.create();
@@ -36,6 +38,10 @@ describe("Full flow test", function () {
         };
         await docker.backend.up(dockerEnv);
         await db.clearDb();
+
+        // ethers.provider will cache some things like latest block number,
+        // so it is better to use a fresh provider in each test
+        web3Provider = new ethers.providers.JsonRpcProvider()
     });
 
     afterEach(async function () {
@@ -113,7 +119,7 @@ describe("Full flow test", function () {
         const initialBalances = {}
         for (const signer of nonFundedAddresses) {
             const address = await signer.getAddress()
-            initialBalances[address] = await ethers.provider.getBalance(address)
+            initialBalances[address] = await web3Provider.getBalance(address)
         }
 
         const allAddresses = [...fundedAddresses, ...nonFundedAddresses]
@@ -135,13 +141,13 @@ describe("Full flow test", function () {
         const initialBalance = ethers.utils.parseEther("10000")
         // check wallet balances of funded addresses
         for (const signer of fundedAddresses) {
-            expect(await ethers.provider.getBalance(await signer.getAddress())).not.to.be.equal(initialBalance)
+            expect(await web3Provider.getBalance(await signer.getAddress())).not.to.be.equal(initialBalance)
         }
 
         // check wallet balances of non-funded addresses
         for (const signer of nonFundedAddresses) {
             const address = await signer.getAddress()
-            expect(await ethers.provider.getBalance(address)).to.be.equal(initialBalances[address])
+            expect(await web3Provider.getBalance(address)).to.be.equal(initialBalances[address])
         }
     });
 
@@ -413,7 +419,7 @@ describe("Full flow test", function () {
         const rewardAmount = ethers.utils.parseEther("50000") // two to one for payout (Alice and Jane)
 
         // store block number for payout
-        const payoutBlockNumber = await ethers.provider.getBlockNumber()
+        const payoutBlockNumber = await web3Provider.getBlockNumber()
 
         // some additional transfers which should not be included in payout
         await testData.asset.connect(testData.issuerOwner).transfer(marksAddress, ethers.utils.parseEther("1000"))
@@ -454,6 +460,8 @@ describe("Full flow test", function () {
             )
             maxRetries -= 1
         } while (snapshot.status != "SUCCESS" && maxRetries > 0)
+
+        expect(snapshot.status).to.be.equal("SUCCESS")
 
         const rewardCoin = await helpers.deployStablecoin(testData.issuerOwner, "1000000000000", 18)
 
@@ -581,7 +589,7 @@ describe("Full flow test", function () {
 
         // needed to make web3j on backend work correctly with hardhat test network
         for (let i = 0; i < 16; i++) {
-            await ethers.provider.send("eth_newFilter", [filter])
+            await web3Provider.send("eth_newFilter", [filter])
         }
     }
 
