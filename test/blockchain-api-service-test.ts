@@ -58,9 +58,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
@@ -130,9 +129,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
@@ -206,9 +204,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
@@ -281,9 +278,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const balanceCheckRequest = await blockchainApiService.createBalanceCheckRequest(request);
@@ -360,9 +356,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const sendRequest = await blockchainApiService.createSendRequest(request);
@@ -444,9 +439,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const sendRequest = await blockchainApiService.createSendRequest(request);
@@ -533,9 +527,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const sendRequest = await blockchainApiService.createSendRequest(request);
@@ -617,9 +610,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const sendRequest = await blockchainApiService.createSendRequest(request);
@@ -706,9 +698,8 @@ describe("Blockchain API Service test", function () {
                 test_data: true
             },
             screen_config: {
-                title: "title",
-                message: "message",
-                logo: "logo"
+                before_action_message: "message",
+                after_action_message: "title"
             }
         }
         const sendRequest = await blockchainApiService.createSendRequest(request);

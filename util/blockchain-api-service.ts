@@ -70,9 +70,8 @@ export interface BalanceCheckResponse {
 export type RequestStatus = 'PENDING' | 'SUCCESS' | 'FAILED'
 
 export interface ScreenConfig {
-    title?: string
-    message?: string
-    logo?: string
+    before_action_message?: string
+    after_action_message?: string
 }
 
 export async function createSendRequest(request: CreateSendRequest): Promise<SendRequestResponse> {
