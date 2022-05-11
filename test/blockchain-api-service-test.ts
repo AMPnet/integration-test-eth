@@ -19,7 +19,7 @@ describe("Blockchain API Service test", function () {
 
     beforeEach(async function () {
         testData = new TestData();
-        await testData.deploy();
+        await testData.deploy({logOutput: false});
         await docker.blockchainApi.up();
         await db.clearBlockchainApiDb();
     });
