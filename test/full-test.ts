@@ -26,7 +26,7 @@ describe("Full flow test", function () {
 
     beforeEach(async function () {
         testData = new TestData();
-        await testData.deploy();
+        await testData.deploy({logOutput: false});
         const dockerEnv: DockerEnv = {
             WALLET_APPROVER_ADDRESS: testData.walletApproverService.address,
             FAUCET_SERVICE_ADDRESS: testData.faucetService.address,
@@ -54,7 +54,7 @@ describe("Full flow test", function () {
     });
 
     it("Should whitelist user and get tx history", async function () {
-        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true});
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true}, {logOutput: false});
 
         const franksAddress = await testData.frank.getAddress()
         const payload = await userService.getPayload(franksAddress)
@@ -152,7 +152,7 @@ describe("Full flow test", function () {
     });
 
     it("Should auto-invest for campaign without KYC after user receives funds", async function () {
-        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false});
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false}, {logOutput: false});
 
         const franksAddress = await testData.frank.getAddress()
         const payload = await userService.getPayload(franksAddress)
@@ -198,7 +198,7 @@ describe("Full flow test", function () {
             3) approve amount slightly below the funds available at the wallet (✅)
             4) approve amount equal to the minPerUserInvestment but the funds available slightly below this level (❌)
     `, async function () {
-        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true});
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true}, {logOutput: false});
 
         const franksAddress = await testData.frank.getAddress()
         const payload = await userService.getPayload(franksAddress)
@@ -377,7 +377,7 @@ describe("Full flow test", function () {
     });
 
     it("Should whitelist multiple users in batch", async function () {
-        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true});
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: true}, {logOutput: false});
 
         const startAccount = 0;
         const endAccount = 20;
@@ -401,7 +401,7 @@ describe("Full flow test", function () {
     });
 
     it("Should create payout for some asset and allow users to claim funds", async function () {
-        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false})
+        await testData.deployIssuerAssetTransferableCampaign({campaignWhitelistRequired: false}, {logOutput: false})
 
         const alicesAddress = await testData.alice.getAddress()
         const janesAddress = await testData.jane.getAddress()
@@ -463,7 +463,7 @@ describe("Full flow test", function () {
 
         expect(snapshot.status).to.be.equal("SUCCESS")
 
-        const rewardCoin = await helpers.deployStablecoin(testData.issuerOwner, "1000000000000", 18)
+        const rewardCoin = await helpers.deployStablecoin(testData.issuerOwner, "1000000000000", 18, {logOutput: false})
 
         // approve reward for payout
         await rewardCoin.connect(testData.issuerOwner).approve(testData.payoutManager.address, rewardAmount)
