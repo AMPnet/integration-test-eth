@@ -49,7 +49,7 @@ export async function clearDb() {
 export async function clearBlockchainApiDb() {
     return new Promise<void>(async resolve => {
         await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.client_info;')
-        await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.send_erc20_request;')
+        await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.erc20_send_request;')
         await blockchainApiDb.raw('TRUNCATE TABLE blockchain_api_service.erc20_balance_request;')
         resolve()
     })
