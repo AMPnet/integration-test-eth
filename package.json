@@ -15,7 +15,7 @@
     "@danielwpz/health-check": "0.0.1",
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-waffle": "^2.0.2",
-    "@types/chai": "^4.3.0",
+    "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.21",
     "axios": "^0.27.2",
