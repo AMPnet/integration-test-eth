@@ -581,7 +581,7 @@ describe("Blockchain API Service test", function () {
         expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(failedSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(failedSendRequest.send_tx.from).to.be.equal(senderAddress);
-        expect(failedSendRequest.send_tx.to).to.be.equal(tokenAddress);
+        expect(failedSendRequest.send_tx.to).to.be.equal(recipientAddress);
         expect(failedSendRequest.send_tx.data).to.not.be.null;
         expect(failedSendRequest.send_tx.block_confirmations).to.not.be.null;
     });
@@ -665,7 +665,7 @@ describe("Blockchain API Service test", function () {
         expect(failedSendRequest.redirect_url).to.be.equal(redirectUrlBase + sendRequest.id);
         expect(failedSendRequest.send_tx.tx_hash).to.be.equal(txHash);
         expect(failedSendRequest.send_tx.from).to.be.equal(senderAddress);
-        expect(failedSendRequest.send_tx.to).to.be.equal(tokenAddress);
+        expect(failedSendRequest.send_tx.to).to.be.equal(testData.stablecoin.address.toLowerCase());
         expect(failedSendRequest.send_tx.data).to.not.be.null;
         expect(failedSendRequest.send_tx.block_confirmations).to.not.be.null;
     });
